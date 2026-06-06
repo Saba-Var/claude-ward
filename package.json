@@ -1,6 +1,6 @@
 {
   "name": "claude-ward",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Tamper-detection tripwire for Claude Code's local configuration.",
   "type": "module",
   "license": "MIT",
