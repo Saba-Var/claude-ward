@@ -6,6 +6,8 @@ All notable changes to this project are documented here. The format is based on
 
 ## [Unreleased]
 
+## [0.1.1] - 2026-06-06
+
 ### Security
 
 - Close loopback-repoint evasions: localhost detection now covers the whole
