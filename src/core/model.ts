@@ -40,6 +40,9 @@ export interface CredentialMeta {
   hash?: string
   mode?: number
   size?: number
+  // The file exists but could not be read (e.g. permissions dropped to 000).
+  // Distinct from absent, so a tamper does not read as a normal logout.
+  unreadable?: boolean
 }
 
 export interface TrackedState {

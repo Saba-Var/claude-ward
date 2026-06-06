@@ -1,4 +1,4 @@
-import { evaluate } from './scan.js'
+import { evaluate, reportWarnings } from './scan.js'
 import { formatFindings } from '../io/report.js'
 
 export function diffCommand(opts: { quiet?: boolean } = {}): void {
@@ -8,5 +8,6 @@ export function diffCommand(opts: { quiet?: boolean } = {}): void {
     process.exitCode = 1
     return
   }
+  reportWarnings(result.warnings)
   process.stdout.write(`${formatFindings(result.findings, opts)}\n`)
 }

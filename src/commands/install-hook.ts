@@ -37,10 +37,15 @@ function isObject(v: unknown): v is Record<string, unknown> {
 function readSettings(): SettingsRead {
   const r = readJsonFile(paths.settings)
   if (r.status === 'missing') return { ok: true, settings: {} }
-  if (r.status === 'ok')
-    return isObject(r.data)
-      ? { ok: true, settings: r.data as SettingsShape, mode: statFile(paths.settings)?.mode }
-      : { ok: false, reason: 'it is not a JSON object' }
+  if (r.status === 'ok') {
+    if (!isObject(r.data)) return { ok: false, reason: 'it is not a JSON object' }
+    const stat = statFile(paths.settings)
+    return {
+      ok: true,
+      settings: r.data as SettingsShape,
+      mode: stat.status === 'ok' ? stat.mode : undefined,
+    }
+  }
   return {
     ok: false,
     reason: r.status === 'malformed' ? 'it is not valid JSON' : 'it is unreadable',

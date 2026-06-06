@@ -6,7 +6,7 @@ import { readBytes, readJsonFile, statFile } from './read.js'
 
 export interface SnapshotWarning {
   file: string
-  status: 'malformed' | 'denied'
+  status: 'malformed' | 'denied' | 'error'
   error: string
 }
 
@@ -18,21 +18,30 @@ export interface Snapshot {
 function readJsonInput(file: string, warnings: SnapshotWarning[]): unknown {
   const r = readJsonFile(file)
   if (r.status === 'ok') return r.data
-  if (r.status === 'malformed' || r.status === 'denied')
+  if (r.status === 'malformed' || r.status === 'denied' || r.status === 'error')
     warnings.push({ file, status: r.status, error: r.error })
   return undefined
 }
 
-function readCredentials(): CredentialMeta {
+function readCredentials(warnings: SnapshotWarning[]): CredentialMeta {
   const meta = statFile(paths.credentials)
-  if (!meta) return { present: false }
-  const bytes = readBytes(paths.credentials)
-  return {
-    present: true,
-    hash: bytes ? sha256(bytes) : undefined,
-    mode: meta.mode,
-    size: meta.size,
+  if (meta.status === 'missing') return { present: false }
+  if (meta.status === 'denied') {
+    // Present but unreadable: record it so the rule can flag a tamper instead
+    // of treating the dropout as a logout.
+    warnings.push({ file: paths.credentials, status: 'denied', error: meta.error })
+    return { present: true, unreadable: true }
   }
+  const bytes = readBytes(paths.credentials)
+  if (!bytes) {
+    warnings.push({
+      file: paths.credentials,
+      status: 'denied',
+      error: 'stat succeeded but the file could not be read',
+    })
+    return { present: true, unreadable: true }
+  }
+  return { present: true, hash: sha256(bytes), mode: meta.mode, size: meta.size }
 }
 
 export function takeSnapshot(): Snapshot {
@@ -41,7 +50,7 @@ export function takeSnapshot(): Snapshot {
     claudeJson: readJsonInput(paths.claudeJson, warnings),
     settings: readJsonInput(paths.settings, warnings),
     settingsLocal: readJsonInput(paths.settingsLocal, warnings),
-    credentials: readCredentials(),
+    credentials: readCredentials(warnings),
   }
   return { state: collect(inputs), warnings }
 }

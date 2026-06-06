@@ -5,6 +5,7 @@ export type ReadResult =
   | { status: 'missing' }
   | { status: 'malformed'; error: string }
   | { status: 'denied'; error: string }
+  | { status: 'error'; error: string }
 
 export function readJsonFile(path: string): ReadResult {
   let raw: string
@@ -14,7 +15,7 @@ export function readJsonFile(path: string): ReadResult {
     const code = (err as NodeJS.ErrnoException).code
     if (code === 'ENOENT') return { status: 'missing' }
     if (code === 'EACCES' || code === 'EPERM') return { status: 'denied', error: String(err) }
-    return { status: 'denied', error: String(err) }
+    return { status: 'error', error: String(err) }
   }
   try {
     return { status: 'ok', data: JSON.parse(raw), raw }
@@ -23,12 +24,22 @@ export function readJsonFile(path: string): ReadResult {
   }
 }
 
-export function statFile(path: string): { mode: number; size: number } | null {
+export type StatResult =
+  | { status: 'ok'; mode: number; size: number }
+  | { status: 'missing' }
+  | { status: 'denied'; error: string }
+
+// Distinguish "the file is gone" (a normal logout) from "the file is there but
+// we cannot read it" (a permission change worth flagging). Folding both into
+// null is how the credential file used to fail open.
+export function statFile(path: string): StatResult {
   try {
     const s = statSync(path)
-    return { mode: s.mode & 0o777, size: s.size }
-  } catch {
-    return null
+    return { status: 'ok', mode: s.mode & 0o777, size: s.size }
+  } catch (err) {
+    const code = (err as NodeJS.ErrnoException).code
+    if (code === 'ENOENT') return { status: 'missing' }
+    return { status: 'denied', error: String(err) }
   }
 }
 

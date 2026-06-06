@@ -5,7 +5,7 @@ import { approveCommand } from './commands/approve.js'
 import { diffCommand } from './commands/diff.js'
 import { initCommand } from './commands/init.js'
 import { installHookCommand, uninstallHookCommand } from './commands/install-hook.js'
-import { scanCommand, evaluate } from './commands/scan.js'
+import { scanCommand, evaluate, reportWarnings } from './commands/scan.js'
 import { statusCommand } from './commands/status.js'
 import { notify } from './io/notify.js'
 import { formatFindings } from './io/report.js'
@@ -70,6 +70,7 @@ program
         process.stderr.write('No baseline found. Run "claude-ward init" first.\n')
         return
       }
+      reportWarnings(result.warnings)
       process.stdout.write(
         `\n${new Date().toISOString()}\n${formatFindings(result.findings, { quiet: opts.quiet })}\n`,
       )

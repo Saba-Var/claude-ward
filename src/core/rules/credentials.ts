@@ -10,6 +10,17 @@ export function ruleCredentials(change: Change, _cfg: WardConfig): Finding | nul
   const after = change.after
   if (change.kind === 'added' || !after) return null
 
+  if (after.unreadable) {
+    return {
+      id: findingId('credentials.unreadable', change),
+      ruleId: 'credentials.unreadable',
+      severity: 'HIGH',
+      title: 'Credentials file became unreadable',
+      detail:
+        '~/.claude/.credentials.json exists but could not be read (permissions may have been dropped). A tamper can hide behind an unreadable file - investigate before re-authenticating.',
+      change,
+    }
+  }
   if (isGroupOrWorldReadable(after.mode)) {
     return {
       id: findingId('credentials.mode', change),
