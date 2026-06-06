@@ -6,6 +6,14 @@ All notable changes to this project are documented here. The format is based on
 
 ## [Unreleased]
 
+## [0.1.2] - 2026-06-06
+
+### Fixed
+
+- Quickstart installs the CLI globally (`npm i -g claude-ward`) so the `SessionStart`
+  hook, which calls `claude-ward`, resolves on `PATH`. The previous `npx`-only steps left
+  the installed hook failing with `command not found`.
+
 ## [0.1.1] - 2026-06-06
 
 ### Security
