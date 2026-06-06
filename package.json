@@ -4,6 +4,25 @@
   "description": "Tamper-detection tripwire for Claude Code's local configuration.",
   "type": "module",
   "license": "MIT",
+  "author": "Saba Vartasashvili",
+  "homepage": "https://github.com/Saba-Var/claude-ward#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Saba-Var/claude-ward.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Saba-Var/claude-ward/issues"
+  },
+  "keywords": [
+    "claude",
+    "claude-code",
+    "security",
+    "tamper-detection",
+    "tripwire",
+    "mcp",
+    "supply-chain",
+    "cli"
+  ],
   "engines": {
     "node": ">=20"
   },
@@ -20,6 +39,10 @@
       "default": "./dist/index.js"
     }
   },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
   "scripts": {
     "build": "tsup",
     "typecheck": "tsc --noEmit",
@@ -27,7 +50,7 @@
     "test:watch": "vitest",
     "lint": "eslint . && prettier --check .",
     "format": "prettier --write .",
-    "prepublishOnly": "npm run build",
+    "prepublishOnly": "npm run typecheck && npm run lint && npm test && npm run build",
     "prepare": "husky"
   },
   "lint-staged": {
