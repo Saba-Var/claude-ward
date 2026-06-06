@@ -171,6 +171,12 @@ function collectEnv(...sources: Record<string, unknown>[]): EnvEntry[] {
     .map(([key, value]) => ({ key, value }))
 }
 
+/**
+ * Normalize raw parsed config into a TrackedState. Secret-bearing values
+ * (tokens, API keys) are reduced to a hash marker and URL fields are sanitized
+ * before they enter the result, so the output is safe to persist. Pure and
+ * total: malformed or partial input yields safe defaults rather than throwing.
+ */
 export function collect(inputs: CollectInputs): TrackedState {
   const claudeJson = asObject(inputs.claudeJson)
   const settings = asObject(inputs.settings)

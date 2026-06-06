@@ -41,6 +41,12 @@ function infoFinding(change: Change): Finding {
   }
 }
 
+/**
+ * Classify changes into findings: exactly one Finding per input Change. Rules
+ * are ordered by severity and the first to match a change wins; a change no rule
+ * claims becomes an INFO finding, so nothing passes silently. Pure and
+ * deterministic - the same changes and config always yield the same findings.
+ */
 export function runRules(changes: Change[], cfg: WardConfig): Finding[] {
   const findings: Finding[] = []
   for (const change of changes) {

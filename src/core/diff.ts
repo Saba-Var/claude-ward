@@ -111,6 +111,7 @@ function credChanges(before: CredentialMeta, after: CredentialMeta): Change[] {
   return []
 }
 
+/** Compare two TrackedStates into a flat list of added/removed/modified changes. */
 export function diff(before: TrackedState, after: TrackedState): Change[] {
   return [
     ...diffKeyed('mcpServer', servers(before), servers(after)),
@@ -123,6 +124,11 @@ export function diff(before: TrackedState, after: TrackedState): Change[] {
   ]
 }
 
+/**
+ * Return a copy of `state` with one change folded in. `approve <id>` uses this
+ * to trust a single change without re-snapshotting (and so without absorbing
+ * other pending changes).
+ */
 export function applyChange(state: TrackedState, change: Change): TrackedState {
   const next: TrackedState = JSON.parse(JSON.stringify(state))
   const replaceArray = <T>(arr: T[], match: (x: T) => boolean, value: T | null): T[] => {

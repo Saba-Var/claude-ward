@@ -48,6 +48,7 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
     "lint": "eslint . && prettier --check .",
     "format": "prettier --write .",
     "prepublishOnly": "npm run typecheck && npm run lint && npm test && npm run build",
@@ -70,6 +71,7 @@
   "devDependencies": {
     "@types/node": "^20.14.0",
     "@types/node-notifier": "^8.0.5",
+    "@vitest/coverage-v8": "^2.1.9",
     "eslint": "^9.9.0",
     "husky": "^9.1.7",
     "lint-staged": "^17.0.7",

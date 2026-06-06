@@ -9,6 +9,14 @@ import { scanCommand } from './commands/scan.js'
 import { statusCommand } from './commands/status.js'
 import { watchCommand } from './commands/watch.js'
 
+// The engines field is advisory and does not protect npx/global-install users,
+// so fail loudly on an unsupported Node rather than crash deep in some newer API.
+const nodeMajor = Number(process.versions.node.split('.')[0])
+if (Number.isFinite(nodeMajor) && nodeMajor < 20) {
+  process.stderr.write(`claude-ward requires Node 20 or newer (found ${process.versions.node}).\n`)
+  process.exit(1)
+}
+
 function nowIso(): string {
   return new Date().toISOString()
 }
