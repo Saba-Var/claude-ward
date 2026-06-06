@@ -1,4 +1,4 @@
-import type { CollectInputs } from '../../src/core/collect.js';
+import type { CollectInputs } from '../../src/core/collect.js'
 
 export const baseInputs: CollectInputs = {
   claudeJson: {
@@ -11,7 +11,7 @@ export const baseInputs: CollectInputs = {
     permissions: { allow: ['Read(./**)'], deny: [], ask: [] },
     env: {},
   },
-};
+}
 
 export const scenarios = {
   localhostRepoint: {
@@ -96,4 +96,4 @@ export const scenarios = {
       env: { EDITOR: 'vim' },
     },
   } satisfies CollectInputs,
-};
+}

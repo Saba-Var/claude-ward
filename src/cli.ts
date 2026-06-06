@@ -1,63 +1,63 @@
 #!/usr/bin/env node
-import { Command } from 'commander';
-import { VERSION } from './index.js';
-import { approveCommand } from './commands/approve.js';
-import { diffCommand } from './commands/diff.js';
-import { initCommand } from './commands/init.js';
-import { installHookCommand, uninstallHookCommand } from './commands/install-hook.js';
-import { scanCommand, evaluate } from './commands/scan.js';
-import { statusCommand } from './commands/status.js';
-import { notify } from './io/notify.js';
-import { formatFindings } from './io/report.js';
-import { startWatcher } from './io/watcher.js';
+import { Command } from 'commander'
+import { VERSION } from './index.js'
+import { approveCommand } from './commands/approve.js'
+import { diffCommand } from './commands/diff.js'
+import { initCommand } from './commands/init.js'
+import { installHookCommand, uninstallHookCommand } from './commands/install-hook.js'
+import { scanCommand, evaluate } from './commands/scan.js'
+import { statusCommand } from './commands/status.js'
+import { notify } from './io/notify.js'
+import { formatFindings } from './io/report.js'
+import { startWatcher } from './io/watcher.js'
 
 function nowIso(): string {
-  return new Date().toISOString();
+  return new Date().toISOString()
 }
 
-const program = new Command();
+const program = new Command()
 program
   .name('claude-ward')
   .description("Tripwire for Claude Code's local configuration.")
-  .version(VERSION);
+  .version(VERSION)
 
 program
   .command('init')
   .description('Trust the current config and write the baseline + allowlist.')
   .option('--force', 'overwrite an existing baseline')
-  .action((opts) => initCommand({ force: opts.force, now: nowIso() }));
+  .action((opts) => initCommand({ force: opts.force, now: nowIso() }))
 
 program
   .command('scan')
   .description('One-shot check; exits non-zero on HIGH/CRITICAL.')
   .option('--quiet', 'suppress INFO findings')
-  .action((opts) => scanCommand({ quiet: opts.quiet }));
+  .action((opts) => scanCommand({ quiet: opts.quiet }))
 
 program
   .command('diff')
   .description('Show current changes against the baseline.')
   .option('--quiet', 'suppress INFO findings')
-  .action((opts) => diffCommand({ quiet: opts.quiet }));
+  .action((opts) => diffCommand({ quiet: opts.quiet }))
 
-program.command('status').description('Show baseline summary.').action(statusCommand);
+program.command('status').description('Show baseline summary.').action(statusCommand)
 
 program
   .command('approve')
   .description('Accept changes and update the baseline.')
   .option('--all', 'approve every pending change')
   .argument('[id]', 'finding id to approve')
-  .action((id, opts) => approveCommand({ all: opts.all, id, now: nowIso() }));
+  .action((id, opts) => approveCommand({ all: opts.all, id, now: nowIso() }))
 
 program
   .command('install-hook')
   .description('Add a SessionStart hook that runs "claude-ward scan".')
   .option('--yes', 'skip the confirmation prompt')
-  .action(async (opts) => installHookCommand({ yes: opts.yes, now: nowIso() }));
+  .action(async (opts) => installHookCommand({ yes: opts.yes, now: nowIso() }))
 
 program
   .command('uninstall-hook')
   .description('Remove the SessionStart hook.')
-  .action(async () => uninstallHookCommand({ now: nowIso() }));
+  .action(async () => uninstallHookCommand({ now: nowIso() }))
 
 program
   .command('watch')
@@ -65,25 +65,25 @@ program
   .option('--quiet', 'suppress INFO findings')
   .action((opts) => {
     const run = (): void => {
-      const result = evaluate();
+      const result = evaluate()
       if (!result) {
-        process.stderr.write('No baseline found. Run "claude-ward init" first.\n');
-        return;
+        process.stderr.write('No baseline found. Run "claude-ward init" first.\n')
+        return
       }
       process.stdout.write(
         `\n${new Date().toISOString()}\n${formatFindings(result.findings, { quiet: opts.quiet })}\n`,
-      );
-      notify(result.findings);
-    };
-    process.stdout.write('Watching Claude Code config. Ctrl-C to stop.\n');
-    run();
-    const handle = startWatcher(run);
-    const stop = (): void => void handle.close().then(() => process.exit(0));
-    process.on('SIGINT', stop);
-    process.on('SIGTERM', stop);
-  });
+      )
+      notify(result.findings)
+    }
+    process.stdout.write('Watching Claude Code config. Ctrl-C to stop.\n')
+    run()
+    const handle = startWatcher(run)
+    const stop = (): void => void handle.close().then(() => process.exit(0))
+    process.on('SIGINT', stop)
+    process.on('SIGTERM', stop)
+  })
 
 program.parseAsync().catch((err) => {
-  process.stderr.write(`${String(err)}\n`);
-  process.exitCode = 1;
-});
+  process.stderr.write(`${String(err)}\n`)
+  process.exitCode = 1
+})

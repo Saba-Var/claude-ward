@@ -1,14 +1,14 @@
-import { loadBaseline, loadWardConfig } from '../io/baseline.js';
-import { paths } from '../io/paths.js';
+import { loadBaseline, loadWardConfig } from '../io/baseline.js'
+import { paths } from '../io/paths.js'
 
 export function statusCommand(): void {
-  const baseline = loadBaseline();
+  const baseline = loadBaseline()
   if (!baseline) {
-    process.stdout.write('No baseline. Run "claude-ward init".\n');
-    return;
+    process.stdout.write('No baseline. Run "claude-ward init".\n')
+    return
   }
-  const cfg = loadWardConfig();
-  const s = baseline.state;
+  const cfg = loadWardConfig()
+  const s = baseline.state
   process.stdout.write(
     [
       `baseline:        ${paths.baseline}`,
@@ -23,5 +23,5 @@ export function statusCommand(): void {
       `credentials:     ${s.credentials.present ? 'tracked (hash only)' : 'absent'}`,
       `allowed hosts:   ${cfg.allowedHosts.join(', ') || '(none)'}`,
     ].join('\n') + '\n',
-  );
+  )
 }

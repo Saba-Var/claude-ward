@@ -1,6 +1,6 @@
-import { describe, expect, it } from 'vitest';
-import type { Finding } from '../src/core/model.js';
-import { formatFindings, summarize } from '../src/io/report.js';
+import { describe, expect, it } from 'vitest'
+import type { Finding } from '../src/core/model.js'
+import { formatFindings, summarize } from '../src/io/report.js'
 
 const findings: Finding[] = [
   {
@@ -19,22 +19,22 @@ const findings: Finding[] = [
     detail: 'd2',
     change: { kind: 'added', category: 'env', path: 'q' },
   },
-];
+]
 
 describe('report', () => {
   it('summarize counts by severity', () => {
-    expect(summarize(findings)).toEqual({ CRITICAL: 1, HIGH: 0, MEDIUM: 0, INFO: 1 });
-  });
+    expect(summarize(findings)).toEqual({ CRITICAL: 1, HIGH: 0, MEDIUM: 0, INFO: 1 })
+  })
 
   it('formatFindings includes id, severity and title', () => {
-    const out = formatFindings(findings);
-    expect(out).toContain('CRITICAL');
-    expect(out).toContain('a1');
-    expect(out).toContain('X');
-  });
+    const out = formatFindings(findings)
+    expect(out).toContain('CRITICAL')
+    expect(out).toContain('a1')
+    expect(out).toContain('X')
+  })
 
   it('formatFindings can drop INFO', () => {
-    const out = formatFindings(findings, { quiet: true });
-    expect(out).not.toContain('Y');
-  });
-});
+    const out = formatFindings(findings, { quiet: true })
+    expect(out).not.toContain('Y')
+  })
+})
