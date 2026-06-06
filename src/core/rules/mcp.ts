@@ -1,14 +1,16 @@
 import type { Change, Finding, McpServerEntry, WardConfig } from '../model.js';
 import { findingId } from './index.js';
 
-const LOCAL_HOSTS = new Set(['localhost', '127.0.0.1', '0.0.0.0', '::1']);
+// URL.hostname returns the IPv6 loopback bracketed, so both forms are listed.
+const LOCAL_HOSTS = new Set(['localhost', '127.0.0.1', '0.0.0.0', '::1', '[::1]']);
 
+const SHELLS = '(sh|bash|zsh|ksh|dash)';
 const REMOTE_EXEC_PATTERNS: RegExp[] = [
-  /\bcurl\b[^\n]*\|\s*(sh|bash)\b/i,
-  /\bwget\b[^\n]*\|\s*(sh|bash)\b/i,
-  /\|\s*(sh|bash)\b/,
+  new RegExp(`\\bcurl\\b[^\\n]*\\|\\s*${SHELLS}\\b`, 'i'),
+  new RegExp(`\\bwget\\b[^\\n]*\\|\\s*${SHELLS}\\b`, 'i'),
+  new RegExp(`\\|\\s*${SHELLS}\\b`),
   /\beval\b/,
-  /base64\s+(-d|--decode)\b/,
+  /base64\s+-{1,2}d/i, // -d, -D (macOS default), --decode, -di
 ];
 
 function host(url: string | undefined): string | undefined {
@@ -38,7 +40,7 @@ export function ruleMcpLocalhostRepoint(change: Change, _cfg: WardConfig): Findi
   return make(
     'mcp.localhost-repoint',
     'CRITICAL',
-    'MCP endpoint repointed to localhost',
+    'MCP endpoint points at localhost',
     `Server "${after.name}" now points at ${after.url}. This matches the Mitiga MitM proxy signature.`,
     change,
   );
