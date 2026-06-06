@@ -6,7 +6,16 @@ A tripwire that watches Claude Code's local config and tells you when something 
 [![npm](https://img.shields.io/npm/v/claude-ward.svg)](https://www.npmjs.com/package/claude-ward)
 [![license](https://img.shields.io/npm/l/claude-ward.svg)](./LICENSE)
 
-<!-- DEMO: replace with an asciinema cast or GIF of `init` then a `scan` catching a localhost repoint -->
+What a caught attack looks like:
+
+```text
+$ claude-ward scan
+[CRITICAL] 9f3a1c2b8e4d  MCP endpoint points at localhost
+    Server "github" now points at http://localhost:6666/mcp. This matches the Mitiga MitM proxy signature.
+    (mcp.localhost-repoint @ mcpServer/global//github)
+$ echo $?
+2
+```
 
 ## The problem
 
@@ -28,6 +37,7 @@ Around the same time, the Shai-Hulud and "Mini" Shai-Hulud npm worms spread acro
 hundreds of packages. Among other things they read `~/.claude.json` and MCP configs to
 harvest credentials, and they write a `SessionStart` hook into `~/.claude/settings.json`
 so their code runs again every time a Claude Code session starts.
+(<https://www.cisa.gov/news-events/alerts/2025/09/23/widespread-supply-chain-compromise-impacting-npm-ecosystem>)
 
 The reason these go unnoticed is mundane: to a firewall or an EDR agent, "a program wrote
 a JSON file in the home directory" is the most ordinary thing in the world. There is no
@@ -86,16 +96,20 @@ There are four steps, and only the last one makes judgements.
 
 The rules, briefly:
 
-- **Critical** - an MCP endpoint repointed to localhost (the Mitiga signature); an MCP
-  command that pipes a download into a shell or decodes and runs a payload
-  (`curl … | sh`, `base64 -d`, `eval`, and similar); a newly injected `SessionStart` hook
-  (the Shai-Hulud persistence signature).
-- **High** - an MCP host you haven't allowlisted; any other new or modified hook; an
-  `ANTHROPIC_BASE_URL` or OTEL endpoint pointed somewhere unexpected; the credential file
-  changing unexpectedly or becoming readable by other users; obfuscated-looking values
-  (long base64/hex blobs, non-ASCII lookalike characters in a URL).
+- **Critical** - an MCP endpoint repointed to localhost in any spelling, including the
+  whole `127.0.0.0/8` range and IPv4-mapped IPv6 (the Mitiga signature); an MCP command
+  that fetches and runs code (`curl … | sh`, `sh -c "$(curl …)"`, a download piped to
+  `python`/`node`, `base64 -d`, `eval`, `nc -e`, and similar); a `SessionStart` hook that
+  is injected or rewritten in place (the Shai-Hulud persistence signature).
+- **High** - an MCP host you haven't allowlisted (matched exactly, with no subdomain
+  wildcards); any other new or modified hook; an `ANTHROPIC_BASE_URL` or OTEL endpoint
+  pointed somewhere unexpected; credentials embedded in an MCP or endpoint URL; the
+  credential file changing unexpectedly, becoming readable by other users, or becoming
+  unreadable; obfuscated-looking values (long base64/hex blobs, non-ASCII lookalike
+  characters in a URL).
 - **Medium** - a new marketplace source, a plugin from a marketplace you don't know, or a
-  broadened permission allow-list (a bare `Bash`, a `Bash(*)`, a wildcard scope).
+  broadened permission allow-list (a bare `Bash`, a `Bash(*)`, a bare `mcp__server` grant,
+  a wildcard scope).
 - **Info** - every other tracked change, so nothing slips by silently.
 
 ## Local only, no telemetry
@@ -109,8 +123,11 @@ This is a security tool, so its own behavior should be boring and verifiable:
   its mode and size - enough to notice a change, not enough to reconstruct anything. Token
   and API-key values in `env` blocks are hashed the same way before they touch the
   baseline; only the URL-valued endpoint keys it actually inspects are kept verbatim.
-- It makes **zero network calls** and sends **no telemetry**. Everything runs on your
-  machine. Its own state lives in `~/.claude-ward/`, separate from the files it watches.
+- Its **core makes zero network calls** and sends **no telemetry**. Everything runs on
+  your machine. The only outbound surface is the optional desktop notification, which it
+  hands to your OS notifier (`node-notifier`); if that backend is missing it falls back to
+  the terminal. Its own state lives in `~/.claude-ward/`, separate from the files it
+  watches, written owner-only.
 
 ## Limitations - what this does not protect against
 
@@ -142,17 +159,30 @@ claude-ward parses the files it watches and classifies changes by what they mean
 Claude Code specifically, which is what lets it call out the Mitiga and Shai-Hulud
 patterns by name.
 
-[Claude-Defender](https://github.com/) is the closest existing project, but it targets a
+[Claude-Defender](https://github.com/2alf/Claude-Defender) is the closest existing project, but it targets a
 different product: the Claude **Desktop** GUI app, whose MCP configuration it inspects
 through an overlay. claude-ward targets Claude **Code**, the CLI - it guards
 `~/.claude.json`, `~/.claude/settings.json`, the hooks, and the credential file, installs
 as an npm package, and integrates with Claude Code's own hook system. If you use both the
 desktop app and the CLI, the two are complementary rather than competing.
 
-## Why I built this
+## Using it as a library
 
-<!-- TODO(author): make this yours - a sentence or two on the moment you realized nothing
-     was watching these files, and why a local tripwire was the answer you wanted. -->
+The detection core is exported, so you can run the same checks from your own code without
+the CLI:
+
+```ts
+import { collect, diff, runRules, deriveConfig } from 'claude-ward'
+
+const before = collect(trustedInputs) // parsed ~/.claude.json, settings, etc.
+const after = collect(currentInputs)
+const findings = runRules(diff(before, after), deriveConfig(before))
+const critical = findings.filter((f) => f.severity === 'CRITICAL')
+```
+
+`collect`, `diff`, and `runRules` are pure and deterministic, so they are easy to test and
+safe to call in any context. The filesystem and notification side effects live behind the
+CLI commands.
 
 ## Contributing
 

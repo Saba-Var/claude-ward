@@ -1,6 +1,7 @@
-import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
+import { mkdirSync, readFileSync } from 'node:fs'
 import { defaultConfig, loadConfig } from '../core/config.js'
-import type { TrackedState, WardConfig } from '../core/model.js'
+import { type TrackedState, type WardConfig, emptyState } from '../core/model.js'
+import { writeFileAtomic } from './atomic.js'
 import { paths } from './paths.js'
 
 export interface Baseline {
@@ -11,24 +12,30 @@ export interface Baseline {
 }
 
 function ensureDir(): void {
-  mkdirSync(paths.wardDir, { recursive: true })
+  mkdirSync(paths.wardDir, { recursive: true, mode: 0o700 })
 }
 
-export function baselineExists(): boolean {
-  try {
-    readFileSync(paths.baseline, 'utf8')
-    return true
-  } catch {
-    return false
-  }
+function isBaseline(value: unknown): value is Baseline {
+  if (typeof value !== 'object' || value === null) return false
+  const v = value as Record<string, unknown>
+  return v.version === 1 && typeof v.state === 'object' && v.state !== null
 }
 
 export function loadBaseline(): Baseline | null {
+  let parsed: unknown
   try {
-    return JSON.parse(readFileSync(paths.baseline, 'utf8')) as Baseline
+    parsed = JSON.parse(readFileSync(paths.baseline, 'utf8'))
   } catch {
     return null
   }
+  if (!isBaseline(parsed)) return null
+  // Backfill missing array fields so a hand-edited or partially-written
+  // baseline cannot crash diff(), which assumes they exist.
+  return { ...parsed, state: { ...emptyState(), ...parsed.state } }
+}
+
+export function baselineExists(): boolean {
+  return loadBaseline() !== null
 }
 
 export function saveBaseline(state: TrackedState, now: string): Baseline {
@@ -40,7 +47,7 @@ export function saveBaseline(state: TrackedState, now: string): Baseline {
     updatedAt: now,
     state,
   }
-  writeFileSync(paths.baseline, JSON.stringify(baseline, null, 2))
+  writeFileAtomic(paths.baseline, JSON.stringify(baseline, null, 2), 0o600)
   return baseline
 }
 
@@ -54,5 +61,5 @@ export function loadWardConfig(): WardConfig {
 
 export function saveWardConfig(config: WardConfig): void {
   ensureDir()
-  writeFileSync(paths.config, JSON.stringify(config, null, 2))
+  writeFileAtomic(paths.config, JSON.stringify(config, null, 2), 0o600)
 }

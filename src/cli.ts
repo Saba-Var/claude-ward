@@ -5,11 +5,17 @@ import { approveCommand } from './commands/approve.js'
 import { diffCommand } from './commands/diff.js'
 import { initCommand } from './commands/init.js'
 import { installHookCommand, uninstallHookCommand } from './commands/install-hook.js'
-import { scanCommand, evaluate } from './commands/scan.js'
+import { scanCommand } from './commands/scan.js'
 import { statusCommand } from './commands/status.js'
-import { notify } from './io/notify.js'
-import { formatFindings } from './io/report.js'
-import { startWatcher } from './io/watcher.js'
+import { watchCommand } from './commands/watch.js'
+
+// The engines field is advisory and does not protect npx/global-install users,
+// so fail loudly on an unsupported Node rather than crash deep in some newer API.
+const nodeMajor = Number(process.versions.node.split('.')[0])
+if (Number.isFinite(nodeMajor) && nodeMajor < 20) {
+  process.stderr.write(`claude-ward requires Node 20 or newer (found ${process.versions.node}).\n`)
+  process.exit(1)
+}
 
 function nowIso(): string {
   return new Date().toISOString()
@@ -63,25 +69,7 @@ program
   .command('watch')
   .description('Watch tracked files and alert on suspicious changes.')
   .option('--quiet', 'suppress INFO findings')
-  .action((opts) => {
-    const run = (): void => {
-      const result = evaluate()
-      if (!result) {
-        process.stderr.write('No baseline found. Run "claude-ward init" first.\n')
-        return
-      }
-      process.stdout.write(
-        `\n${new Date().toISOString()}\n${formatFindings(result.findings, { quiet: opts.quiet })}\n`,
-      )
-      notify(result.findings)
-    }
-    process.stdout.write('Watching Claude Code config. Ctrl-C to stop.\n')
-    run()
-    const handle = startWatcher(run)
-    const stop = (): void => void handle.close().then(() => process.exit(0))
-    process.on('SIGINT', stop)
-    process.on('SIGTERM', stop)
-  })
+  .action((opts) => watchCommand({ quiet: opts.quiet }))
 
 program.parseAsync().catch((err) => {
   process.stderr.write(`${String(err)}\n`)

@@ -4,6 +4,25 @@
   "description": "Tamper-detection tripwire for Claude Code's local configuration.",
   "type": "module",
   "license": "MIT",
+  "author": "Saba Vartasashvili",
+  "homepage": "https://github.com/Saba-Var/claude-ward#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Saba-Var/claude-ward.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Saba-Var/claude-ward/issues"
+  },
+  "keywords": [
+    "claude",
+    "claude-code",
+    "security",
+    "tamper-detection",
+    "tripwire",
+    "mcp",
+    "supply-chain",
+    "cli"
+  ],
   "engines": {
     "node": ">=20"
   },
@@ -20,14 +39,19 @@
       "default": "./dist/index.js"
     }
   },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
   "scripts": {
     "build": "tsup",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
     "lint": "eslint . && prettier --check .",
     "format": "prettier --write .",
-    "prepublishOnly": "npm run build",
+    "prepublishOnly": "npm run typecheck && npm run lint && npm test && npm run build",
     "prepare": "husky"
   },
   "lint-staged": {
@@ -47,6 +71,7 @@
   "devDependencies": {
     "@types/node": "^20.14.0",
     "@types/node-notifier": "^8.0.5",
+    "@vitest/coverage-v8": "^2.1.9",
     "eslint": "^9.9.0",
     "husky": "^9.1.7",
     "lint-staged": "^17.0.7",

@@ -1,4 +1,4 @@
-import type { Change, CredentialMeta, Finding, WardConfig } from '../model.js'
+import type { Change, Finding, WardConfig } from '../model.js'
 import { findingId } from './index.js'
 
 function isGroupOrWorldReadable(mode: number | undefined): boolean {
@@ -7,12 +7,23 @@ function isGroupOrWorldReadable(mode: number | undefined): boolean {
 
 export function ruleCredentials(change: Change, _cfg: WardConfig): Finding | null {
   if (change.category !== 'credentials') return null
-  const after = change.after as CredentialMeta | undefined
+  const after = change.after
   if (change.kind === 'added' || !after) return null
 
+  if (after.unreadable) {
+    return {
+      id: findingId('credentials.unreadable', change),
+      ruleId: 'credentials.unreadable',
+      severity: 'HIGH',
+      title: 'Credentials file became unreadable',
+      detail:
+        '~/.claude/.credentials.json exists but could not be read (permissions may have been dropped). A tamper can hide behind an unreadable file - investigate before re-authenticating.',
+      change,
+    }
+  }
   if (isGroupOrWorldReadable(after.mode)) {
     return {
-      id: findingId('credentials.mode', change.path),
+      id: findingId('credentials.mode', change),
       ruleId: 'credentials.mode',
       severity: 'HIGH',
       title: 'Credentials file became group/world-readable',
@@ -22,7 +33,7 @@ export function ruleCredentials(change: Change, _cfg: WardConfig): Finding | nul
   }
   if (change.kind === 'modified') {
     return {
-      id: findingId('credentials.hash', change.path),
+      id: findingId('credentials.hash', change),
       ruleId: 'credentials.hash',
       severity: 'HIGH',
       title: 'Credentials file changed unexpectedly',

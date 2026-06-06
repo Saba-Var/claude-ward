@@ -27,4 +27,24 @@ describe('config', () => {
     })
     expect(loadConfig(null)).toEqual(defaultConfig())
   })
+
+  it('loadConfig drops non-string allowlist entries instead of trusting them', () => {
+    const cfg = loadConfig({ allowedHosts: ['good.io', 42, null, { host: 'x' }] })
+    expect(cfg.allowedHosts).toEqual(['good.io'])
+  })
+
+  it('loadConfig canonicalizes host entries so spellings compare equal', () => {
+    expect(loadConfig({ allowedHosts: ['API.GitHub.com.'] }).allowedHosts).toEqual([
+      'api.github.com',
+    ])
+  })
+
+  it('a host derived from state matches its canonicalized allowlist entry', () => {
+    const derived = deriveConfig({
+      ...emptyState(),
+      mcpServers: [{ scope: 'global' as const, name: 'a', url: 'https://api.github.com./mcp' }],
+    })
+    const configured = loadConfig({ allowedHosts: ['API.github.com'] })
+    expect(configured.allowedHosts).toEqual(derived.allowedHosts)
+  })
 })

@@ -40,6 +40,9 @@ export interface CredentialMeta {
   hash?: string
   mode?: number
   size?: number
+  // The file exists but could not be read (e.g. permissions dropped to 000).
+  // Distinct from absent, so a tamper does not read as a normal logout.
+  unreadable?: boolean
 }
 
 export interface TrackedState {
@@ -63,12 +66,44 @@ export type ChangeCategory =
 
 export type ChangeKind = 'added' | 'removed' | 'modified'
 
-export interface Change {
+// A change to one tracked entity. Discriminated on `category` so a rule that
+// narrows the category gets the concrete payload type for `before`/`after`
+// with no cast. `before` is present for `removed`/`modified`, `after` for
+// `added`/`modified`; the union keeps both optional and rules guard on `kind`.
+interface ChangeOf<C extends ChangeCategory, V> {
   kind: ChangeKind
-  category: ChangeCategory
+  category: C
+  // Human-readable location, shown in reports.
   path: string
-  before?: unknown
-  after?: unknown
+  // Collision-free identity, set by diff(); rules seed the stable finding id
+  // from it so two distinct entities can never share an id. Falls back to
+  // `path` when a change is built by hand (tests).
+  key?: string
+  before?: V
+  after?: V
+}
+
+export type McpServerChange = ChangeOf<'mcpServer', McpServerEntry>
+export type HookChange = ChangeOf<'hook', HookEntry>
+export type PluginChange = ChangeOf<'plugin', string>
+export type MarketplaceChange = ChangeOf<'marketplace', string>
+export type PermissionChange = ChangeOf<'permission', PermissionEntry>
+export type EnvChange = ChangeOf<'env', EnvEntry>
+export type CredentialsChange = ChangeOf<'credentials', CredentialMeta>
+
+export type Change =
+  | McpServerChange
+  | HookChange
+  | PluginChange
+  | MarketplaceChange
+  | PermissionChange
+  | EnvChange
+  | CredentialsChange
+
+// Compile-time exhaustiveness guard. Reaching this at runtime means a new
+// union member was added without a matching case; the call site fails to type.
+export function assertNever(value: never): never {
+  throw new Error(`unhandled case: ${JSON.stringify(value)}`)
 }
 
 export interface Finding {

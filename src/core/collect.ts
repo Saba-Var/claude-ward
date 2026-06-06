@@ -1,6 +1,7 @@
 import { sha256 } from './hash.js'
 import {
   type CredentialMeta,
+  type EnvEntry,
   type HookEntry,
   type McpServerEntry,
   type PermissionEntry,
@@ -20,8 +21,26 @@ function redactSecret(value: string): string {
   return `redacted:sha256:${sha256(value).slice(0, 12)}`
 }
 
+// URL-valued fields are kept verbatim so the rules can read the host. But a URL
+// can carry secrets in its userinfo (user:pass@) or query (?api_key=...), and
+// those must not reach the baseline. Strip them only when present, so a clean
+// URL is stored byte-for-byte (preserving, for instance, a homoglyph host the
+// obfuscation rule looks for). The userinfo is replaced by a marker rather than
+// dropped, so the rule can still tell credentials were embedded.
+function sanitizeUrl(value: string): string {
+  let u: URL
+  try {
+    u = new URL(value)
+  } catch {
+    return value
+  }
+  const hasUserinfo = u.username !== '' || u.password !== ''
+  if (!hasUserinfo && u.search === '' && u.hash === '') return value
+  return `${u.protocol}//${hasUserinfo ? 'redacted@' : ''}${u.host}${u.pathname}`
+}
+
 function envValue(key: string, value: string): string {
-  return SAFE_RAW_ENV_KEYS.has(key) ? value : redactSecret(value)
+  return SAFE_RAW_ENV_KEYS.has(key) ? sanitizeUrl(value) : redactSecret(value)
 }
 
 function redactEnvRecord(env: Record<string, unknown>): Record<string, string> {
@@ -58,7 +77,7 @@ function collectServersFrom(
     if (project) entry.project = project
     if (typeof s.command === 'string') entry.command = s.command
     if (Array.isArray(s.args)) entry.args = s.args.map(String)
-    if (typeof s.url === 'string') entry.url = s.url
+    if (typeof s.url === 'string') entry.url = sanitizeUrl(s.url)
     if (s.env && typeof s.env === 'object')
       entry.env = redactEnvRecord(s.env as Record<string, unknown>)
     out.push(entry)
@@ -141,7 +160,7 @@ function collectPermissions(...sources: Record<string, unknown>[]): PermissionEn
   return out
 }
 
-function collectEnv(...sources: Record<string, unknown>[]): { key: string; value: string }[] {
+function collectEnv(...sources: Record<string, unknown>[]): EnvEntry[] {
   const merged = new Map<string, string>()
   for (const src of sources) {
     const env = asObject(src.env)
@@ -152,6 +171,12 @@ function collectEnv(...sources: Record<string, unknown>[]): { key: string; value
     .map(([key, value]) => ({ key, value }))
 }
 
+/**
+ * Normalize raw parsed config into a TrackedState. Secret-bearing values
+ * (tokens, API keys) are reduced to a hash marker and URL fields are sanitized
+ * before they enter the result, so the output is safe to persist. Pure and
+ * total: malformed or partial input yields safe defaults rather than throwing.
+ */
 export function collect(inputs: CollectInputs): TrackedState {
   const claudeJson = asObject(inputs.claudeJson)
   const settings = asObject(inputs.settings)

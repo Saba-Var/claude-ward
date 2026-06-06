@@ -34,4 +34,15 @@ describe('ruleCredentials', () => {
       ruleCredentials(credChange('added', { present: true, hash: 'a', mode: 0o600 }), cfg),
     ).toBeNull()
   })
+
+  it('flags a credential file that became unreadable as HIGH', () => {
+    const change = credChange(
+      'modified',
+      { present: true, unreadable: true },
+      { present: true, hash: 'a', mode: 0o600 },
+    )
+    const f = ruleCredentials(change, cfg)
+    expect(f?.severity).toBe('HIGH')
+    expect(f?.ruleId).toBe('credentials.unreadable')
+  })
 })

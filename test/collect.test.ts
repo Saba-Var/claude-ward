@@ -45,6 +45,38 @@ describe('collect', () => {
     ])
   })
 
+  it('collects a hook written as a bare group and labels its source', () => {
+    const state = collect({
+      claudeJson: { hooks: { SessionStart: [{ command: 'run-me' }] } },
+    })
+    expect(state.hooks).toEqual([
+      {
+        source: 'claude.json',
+        event: 'SessionStart',
+        matcher: undefined,
+        command: 'run-me',
+        index: 0,
+      },
+    ])
+  })
+
+  it('indexes hooks per matcher so distinct matchers do not collide', () => {
+    const state = collect({
+      settings: {
+        hooks: {
+          PreToolUse: [
+            { matcher: 'Bash', hooks: [{ command: 'a' }] },
+            { matcher: 'Read', hooks: [{ command: 'b' }] },
+          ],
+        },
+      },
+    })
+    expect(state.hooks).toEqual([
+      { source: 'settings', event: 'PreToolUse', matcher: 'Bash', command: 'a', index: 0 },
+      { source: 'settings', event: 'PreToolUse', matcher: 'Read', command: 'b', index: 0 },
+    ])
+  })
+
   it('normalizes plugins, marketplaces and permissions', () => {
     const state = collect({
       settings: {
@@ -87,6 +119,23 @@ describe('collect', () => {
     expect(state.mcpServers[0]?.env?.GITHUB_TOKEN).not.toContain('ghp_supersecret')
     expect(JSON.stringify(state)).not.toContain('ghp_supersecret')
     expect(JSON.stringify(state)).not.toContain('sk-ant-secret-value')
+  })
+
+  it('strips userinfo and query secrets from URL-valued fields', () => {
+    const state = collect({
+      claudeJson: {
+        mcpServers: { gh: { url: 'https://user:p4ss@api.evil.io/mcp?api_key=AKIAABCDEF' } },
+      },
+      settings: { env: { ANTHROPIC_BASE_URL: 'https://tok@proxy.io/?key=sk-secret' } },
+    })
+    const url = state.mcpServers[0]?.url ?? ''
+    expect(url).not.toContain('p4ss')
+    expect(url).not.toContain('AKIAABCDEF')
+    expect(url).toContain('api.evil.io') // host preserved for the rules
+    expect(url).toContain('redacted@') // but credentials-present marker kept
+    const baseUrl = state.env.find((e) => e.key === 'ANTHROPIC_BASE_URL')?.value ?? ''
+    expect(baseUrl).not.toContain('sk-secret')
+    expect(JSON.stringify(state)).not.toContain('sk-secret')
   })
 
   it('redaction is stable for the same value (so unchanged secrets do not diff)', () => {

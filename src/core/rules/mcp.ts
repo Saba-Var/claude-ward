@@ -1,30 +1,26 @@
-import type { Change, Finding, McpServerEntry, WardConfig } from '../model.js'
+import { hostOf, isLoopbackHost, parseUrl } from '../host.js'
+import type { Change, Finding, WardConfig } from '../model.js'
 import { findingId } from './index.js'
 
-// URL.hostname returns the IPv6 loopback bracketed, so both forms are listed.
-const LOCAL_HOSTS = new Set(['localhost', '127.0.0.1', '0.0.0.0', '::1', '[::1]'])
-
 const SHELLS = '(sh|bash|zsh|ksh|dash)'
+const INTERP = '(python[0-9.]*|perl|ruby|node|php)'
 const REMOTE_EXEC_PATTERNS: RegExp[] = [
   new RegExp(`\\bcurl\\b[^\\n]*\\|\\s*${SHELLS}\\b`, 'i'),
   new RegExp(`\\bwget\\b[^\\n]*\\|\\s*${SHELLS}\\b`, 'i'),
-  new RegExp(`\\|\\s*${SHELLS}\\b`),
+  new RegExp(`\\|\\s*${SHELLS}\\b`, 'i'), // also catches "| Bash", "| SH"
+  // Command substitution that wraps a downloader: sh -c "$(curl ...)".
+  new RegExp(`\\b${SHELLS}\\b[^\\n]*\\$\\((?:[^)]*\\b(?:curl|wget)\\b)`, 'i'),
+  // A downloader piped into a scripting interpreter, or one run inline.
+  new RegExp(`\\b(?:curl|wget)\\b[^\\n]*\\|\\s*${INTERP}\\b`, 'i'),
+  new RegExp(`\\b${INTERP}\\b\\s+-(?:c|e)\\b`, 'i'), // python -c, node -e, perl -e
+  /\bnc\b[^\n]*\s-e\b/i, // netcat reverse shell
   /\beval\b/,
   /base64\s+-{1,2}d/i, // -d, -D (macOS default), --decode, -di
 ]
 
-function host(url: string | undefined): string | undefined {
-  if (!url) return undefined
-  try {
-    return new URL(url).hostname
-  } catch {
-    return undefined
-  }
-}
-
 function isLocal(url: string | undefined): boolean {
-  const h = host(url)
-  return h !== undefined && LOCAL_HOSTS.has(h)
+  const h = hostOf(url)
+  return h !== undefined && isLoopbackHost(h)
 }
 
 function make(
@@ -34,13 +30,14 @@ function make(
   detail: string,
   change: Change,
 ): Finding {
-  return { id: findingId(ruleId, change.path), ruleId, severity, title, detail, change }
+  return { id: findingId(ruleId, change), ruleId, severity, title, detail, change }
 }
 
 export function ruleMcpLocalhostRepoint(change: Change, _cfg: WardConfig): Finding | null {
   if (change.category !== 'mcpServer' || change.kind === 'removed') return null
-  const after = change.after as McpServerEntry
-  const before = change.before as McpServerEntry | undefined
+  const after = change.after
+  if (!after) return null
+  const before = change.before
   if (!isLocal(after.url)) return null
   if (change.kind === 'modified' && isLocal(before?.url)) return null
   return make(
@@ -54,7 +51,8 @@ export function ruleMcpLocalhostRepoint(change: Change, _cfg: WardConfig): Findi
 
 export function ruleMcpRemoteExec(change: Change, _cfg: WardConfig): Finding | null {
   if (change.category !== 'mcpServer' || change.kind === 'removed') return null
-  const after = change.after as McpServerEntry
+  const after = change.after
+  if (!after) return null
   const text = [after.command ?? '', ...(after.args ?? [])].join(' ')
   if (!REMOTE_EXEC_PATTERNS.some((re) => re.test(text))) return null
   return make(
@@ -68,14 +66,27 @@ export function ruleMcpRemoteExec(change: Change, _cfg: WardConfig): Finding | n
 
 export function ruleMcpHostNotAllowlisted(change: Change, cfg: WardConfig): Finding | null {
   if (change.category !== 'mcpServer' || change.kind === 'removed') return null
-  const after = change.after as McpServerEntry
-  const h = host(after.url)
-  if (!h || LOCAL_HOSTS.has(h) || cfg.allowedHosts.includes(h)) return null
+  const after = change.after
+  if (!after) return null
+  const parsed = parseUrl(after.url)
+  if (!parsed || isLoopbackHost(parsed.host)) return null
+  // Credentials embedded in the host (user:pass@) are worth flagging even when
+  // the host itself is allowlisted - they are leaked to whatever the URL hits.
+  if (parsed.hasUserinfo) {
+    return make(
+      'mcp.url-userinfo',
+      'HIGH',
+      'MCP endpoint URL embeds credentials',
+      `Server "${after.name}" points at ${parsed.host} with credentials embedded in the URL.`,
+      change,
+    )
+  }
+  if (cfg.allowedHosts.includes(parsed.host)) return null
   return make(
     'mcp.host-not-allowlisted',
     'HIGH',
     'MCP endpoint host is not in the allowlist',
-    `Server "${after.name}" points at ${h}, which is not a known-good host.`,
+    `Server "${after.name}" points at ${parsed.host}, which is not a known-good host.`,
     change,
   )
 }
