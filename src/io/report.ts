@@ -10,7 +10,10 @@ export function formatFindings(findings: Finding[], opts: { quiet?: boolean } = 
   const shown = opts.quiet ? findings.filter((f) => f.severity !== 'INFO') : findings;
   if (shown.length === 0) return 'No changes against baseline.';
   return shown
-    .map((f) => `[${f.severity}] ${f.id}  ${f.title}\n    ${f.detail}\n    (${f.ruleId} @ ${f.change.path})`)
+    .map(
+      (f) =>
+        `[${f.severity}] ${f.id}  ${f.title}\n    ${f.detail}\n    (${f.ruleId} @ ${f.change.path})`,
+    )
     .join('\n\n');
 }
 

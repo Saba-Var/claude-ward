@@ -59,7 +59,8 @@ function collectServersFrom(
     if (typeof s.command === 'string') entry.command = s.command;
     if (Array.isArray(s.args)) entry.args = s.args.map(String);
     if (typeof s.url === 'string') entry.url = s.url;
-    if (s.env && typeof s.env === 'object') entry.env = redactEnvRecord(s.env as Record<string, unknown>);
+    if (s.env && typeof s.env === 'object')
+      entry.env = redactEnvRecord(s.env as Record<string, unknown>);
     out.push(entry);
   }
   return out;
@@ -146,7 +147,9 @@ function collectEnv(...sources: Record<string, unknown>[]): { key: string; value
     const env = asObject(src.env);
     for (const [k, v] of Object.entries(env)) merged.set(k, envValue(k, String(v)));
   }
-  return [...merged.entries()].sort(([a], [b]) => a.localeCompare(b)).map(([key, value]) => ({ key, value }));
+  return [...merged.entries()]
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([key, value]) => ({ key, value }));
 }
 
 export function collect(inputs: CollectInputs): TrackedState {

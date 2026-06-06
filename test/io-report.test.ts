@@ -3,8 +3,22 @@ import type { Finding } from '../src/core/model.js';
 import { formatFindings, summarize } from '../src/io/report.js';
 
 const findings: Finding[] = [
-  { id: 'a1', ruleId: 'mcp.localhost-repoint', severity: 'CRITICAL', title: 'X', detail: 'd', change: { kind: 'modified', category: 'mcpServer', path: 'p' } },
-  { id: 'b2', ruleId: 'info.tracked-change', severity: 'INFO', title: 'Y', detail: 'd2', change: { kind: 'added', category: 'env', path: 'q' } },
+  {
+    id: 'a1',
+    ruleId: 'mcp.localhost-repoint',
+    severity: 'CRITICAL',
+    title: 'X',
+    detail: 'd',
+    change: { kind: 'modified', category: 'mcpServer', path: 'p' },
+  },
+  {
+    id: 'b2',
+    ruleId: 'info.tracked-change',
+    severity: 'INFO',
+    title: 'Y',
+    detail: 'd2',
+    change: { kind: 'added', category: 'env', path: 'q' },
+  },
 ];
 
 describe('report', () => {

@@ -28,16 +28,20 @@ describe('collect', () => {
       settings: {
         hooks: {
           SessionStart: [{ hooks: [{ type: 'command', command: 'echo hi' }] }],
-          PreToolUse: [
-            { matcher: 'Bash', hooks: [{ command: 'a' }, { command: 'b' }] },
-          ],
+          PreToolUse: [{ matcher: 'Bash', hooks: [{ command: 'a' }, { command: 'b' }] }],
         },
       },
     });
     expect(state.hooks).toEqual([
       { source: 'settings', event: 'PreToolUse', matcher: 'Bash', command: 'a', index: 0 },
       { source: 'settings', event: 'PreToolUse', matcher: 'Bash', command: 'b', index: 1 },
-      { source: 'settings', event: 'SessionStart', matcher: undefined, command: 'echo hi', index: 0 },
+      {
+        source: 'settings',
+        event: 'SessionStart',
+        matcher: undefined,
+        command: 'echo hi',
+        index: 0,
+      },
     ]);
   });
 
@@ -63,7 +67,9 @@ describe('collect', () => {
   it('redacts secret env and mcp-env values but keeps endpoint keys raw', () => {
     const state = collect({
       claudeJson: {
-        mcpServers: { gh: { url: 'https://api.github.com/mcp', env: { GITHUB_TOKEN: 'ghp_supersecret' } } },
+        mcpServers: {
+          gh: { url: 'https://api.github.com/mcp', env: { GITHUB_TOKEN: 'ghp_supersecret' } },
+        },
       },
       settings: {
         env: { ANTHROPIC_BASE_URL: 'https://proxy.io', ANTHROPIC_API_KEY: 'sk-ant-secret-value' },

@@ -26,7 +26,8 @@ export function ruleCredentials(change: Change, _cfg: WardConfig): Finding | nul
       ruleId: 'credentials.hash',
       severity: 'HIGH',
       title: 'Credentials file changed unexpectedly',
-      detail: 'The hash of ~/.claude/.credentials.json changed. If you did not just (re)authenticate, treat this as suspicious.',
+      detail:
+        'The hash of ~/.claude/.credentials.json changed. If you did not just (re)authenticate, treat this as suspicious.',
       change,
     };
   }

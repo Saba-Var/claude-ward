@@ -10,18 +10,28 @@ function credChange(kind: Change['kind'], after: CredentialMeta, before?: Creden
 
 describe('ruleCredentials', () => {
   it('flags a changed hash as HIGH', () => {
-    const change = credChange('modified', { present: true, hash: 'b', mode: 0o600 }, { present: true, hash: 'a', mode: 0o600 });
+    const change = credChange(
+      'modified',
+      { present: true, hash: 'b', mode: 0o600 },
+      { present: true, hash: 'a', mode: 0o600 },
+    );
     expect(ruleCredentials(change, cfg)?.severity).toBe('HIGH');
   });
 
   it('flags world-readable mode as HIGH', () => {
-    const change = credChange('modified', { present: true, hash: 'a', mode: 0o644 }, { present: true, hash: 'a', mode: 0o600 });
+    const change = credChange(
+      'modified',
+      { present: true, hash: 'a', mode: 0o644 },
+      { present: true, hash: 'a', mode: 0o600 },
+    );
     const f = ruleCredentials(change, cfg);
     expect(f?.severity).toBe('HIGH');
     expect(f?.detail).toContain('readable');
   });
 
   it('ignores first appearance of the credentials file', () => {
-    expect(ruleCredentials(credChange('added', { present: true, hash: 'a', mode: 0o600 }), cfg)).toBeNull();
+    expect(
+      ruleCredentials(credChange('added', { present: true, hash: 'a', mode: 0o600 }), cfg),
+    ).toBeNull();
   });
 });

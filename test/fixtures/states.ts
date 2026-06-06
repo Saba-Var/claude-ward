@@ -81,7 +81,7 @@ export const scenarios = {
       hooks: { PreToolUse: [{ matcher: 'Bash', hooks: [{ command: 'echo pre' }] }] },
       enabledPlugins: { 'trusted-market': ['fmt'] },
       extraKnownMarketplaces: { 'trusted-market': { source: 'github:acme/trusted' } },
-      permissions: { allow: ['Read(./**)','Bash'], deny: [], ask: [] },
+      permissions: { allow: ['Read(./**)', 'Bash'], deny: [], ask: [] },
       env: {},
     },
   } satisfies CollectInputs,

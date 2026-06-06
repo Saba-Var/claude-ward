@@ -18,11 +18,7 @@ function eq(a: unknown, b: unknown): boolean {
   return JSON.stringify(a) === JSON.stringify(b);
 }
 
-function diffKeyed<T>(
-  category: ChangeCategory,
-  before: Keyed<T>[],
-  after: Keyed<T>[],
-): Change[] {
+function diffKeyed<T>(category: ChangeCategory, before: Keyed<T>[], after: Keyed<T>[]): Change[] {
   const beforeMap = new Map(before.map((k) => [k.key, k]));
   const afterMap = new Map(after.map((k) => [k.key, k]));
   const changes: Change[] = [];
@@ -33,7 +29,8 @@ function diffKeyed<T>(
       changes.push({ kind: 'modified', category, path: a.path, before: b.value, after: a.value });
   }
   for (const b of before) {
-    if (!afterMap.has(b.key)) changes.push({ kind: 'removed', category, path: b.path, before: b.value });
+    if (!afterMap.has(b.key))
+      changes.push({ kind: 'removed', category, path: b.path, before: b.value });
   }
   return changes;
 }
@@ -55,7 +52,11 @@ function hooks(state: TrackedState): Keyed<HookEntry>[] {
 }
 
 function strings(state: TrackedState, field: 'plugins' | 'marketplaces'): Keyed<string>[] {
-  return state[field].map((v) => ({ key: v, path: `${field === 'plugins' ? 'plugin' : 'marketplace'}/${v}`, value: v }));
+  return state[field].map((v) => ({
+    key: v,
+    path: `${field === 'plugins' ? 'plugin' : 'marketplace'}/${v}`,
+    value: v,
+  }));
 }
 
 function permissions(state: TrackedState): Keyed<PermissionEntry>[] {
@@ -111,7 +112,10 @@ export function applyChange(state: TrackedState, change: Change): TrackedState {
     case 'hook': {
       const v = (change.after ?? change.before) as HookEntry;
       const m = (x: HookEntry) =>
-        x.source === v.source && x.event === v.event && (x.matcher ?? '') === (v.matcher ?? '') && x.index === v.index;
+        x.source === v.source &&
+        x.event === v.event &&
+        (x.matcher ?? '') === (v.matcher ?? '') &&
+        x.index === v.index;
       next.hooks = replaceArray(next.hooks, m, change.kind === 'removed' ? null : v);
       break;
     }
@@ -130,11 +134,16 @@ export function applyChange(state: TrackedState, change: Change): TrackedState {
     }
     case 'env': {
       const v = (change.after ?? change.before) as { key: string; value: string };
-      next.env = replaceArray(next.env, (x) => x.key === v.key, change.kind === 'removed' ? null : v);
+      next.env = replaceArray(
+        next.env,
+        (x) => x.key === v.key,
+        change.kind === 'removed' ? null : v,
+      );
       break;
     }
     case 'credentials': {
-      next.credentials = change.kind === 'removed' ? { present: false } : (change.after as CredentialMeta);
+      next.credentials =
+        change.kind === 'removed' ? { present: false } : (change.after as CredentialMeta);
       break;
     }
   }

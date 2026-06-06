@@ -10,7 +10,11 @@ describe('diff', () => {
   it('detects an added mcp server', () => {
     const changes = diff(emptyState(), withServer('https://a.io'));
     expect(changes).toHaveLength(1);
-    expect(changes[0]).toMatchObject({ kind: 'added', category: 'mcpServer', path: 'mcpServer/global//gh' });
+    expect(changes[0]).toMatchObject({
+      kind: 'added',
+      category: 'mcpServer',
+      path: 'mcpServer/global//gh',
+    });
   });
 
   it('detects a removed mcp server', () => {

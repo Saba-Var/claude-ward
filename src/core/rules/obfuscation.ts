@@ -22,10 +22,20 @@ export function ruleObfuscation(change: Change, _cfg: WardConfig): Finding | nul
   const strings = valueStrings(change.after);
   for (const s of strings) {
     if (BASE64_BLOB.test(s) || HEX_BLOB.test(s)) {
-      return mk('obfuscation.blob', 'Obfuscated blob detected', `Value contains a long base64/hex blob: ${truncate(s)}`, change);
+      return mk(
+        'obfuscation.blob',
+        'Obfuscated blob detected',
+        `Value contains a long base64/hex blob: ${truncate(s)}`,
+        change,
+      );
     }
     if (isUrlLike(s) && NON_ASCII.test(s)) {
-      return mk('obfuscation.homoglyph', 'Non-ASCII characters in a URL', `Possible homoglyph host in: ${s}`, change);
+      return mk(
+        'obfuscation.homoglyph',
+        'Non-ASCII characters in a URL',
+        `Possible homoglyph host in: ${s}`,
+        change,
+      );
     }
   }
   return null;

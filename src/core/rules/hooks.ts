@@ -1,7 +1,13 @@
 import type { Change, Finding, HookEntry, WardConfig } from '../model.js';
 import { findingId } from './index.js';
 
-function make(ruleId: string, severity: Finding['severity'], title: string, detail: string, change: Change): Finding {
+function make(
+  ruleId: string,
+  severity: Finding['severity'],
+  title: string,
+  detail: string,
+  change: Change,
+): Finding {
   return { id: findingId(ruleId, change.path), ruleId, severity, title, detail, change };
 }
 

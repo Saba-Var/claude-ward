@@ -27,7 +27,13 @@ function isLocal(url: string | undefined): boolean {
   return h !== undefined && LOCAL_HOSTS.has(h);
 }
 
-function make(ruleId: string, severity: Finding['severity'], title: string, detail: string, change: Change): Finding {
+function make(
+  ruleId: string,
+  severity: Finding['severity'],
+  title: string,
+  detail: string,
+  change: Change,
+): Finding {
   return { id: findingId(ruleId, change.path), ruleId, severity, title, detail, change };
 }
 

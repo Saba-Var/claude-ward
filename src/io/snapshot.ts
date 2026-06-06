@@ -18,7 +18,8 @@ export interface Snapshot {
 function readJsonInput(file: string, warnings: SnapshotWarning[]): unknown {
   const r = readJsonFile(file);
   if (r.status === 'ok') return r.data;
-  if (r.status === 'malformed' || r.status === 'denied') warnings.push({ file, status: r.status, error: r.error });
+  if (r.status === 'malformed' || r.status === 'denied')
+    warnings.push({ file, status: r.status, error: r.error });
   return undefined;
 }
 

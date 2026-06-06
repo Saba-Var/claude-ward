@@ -65,11 +65,13 @@ via tsup to ESM. Committed lockfile. `engines`, `bin`, `files`, `exports` config
 ## What is monitored
 
 `~/.claude.json`:
+
 - top-level `mcpServers` and per-project `projects.<path>.mcpServers` — each server's
   `command` / `args` / `url` / `env`
 - any `hooks`
 
 `~/.claude/settings.json` and `~/.claude/settings.local.json`:
+
 - `hooks` (all event types)
 - `enabledPlugins`
 - marketplace sources
@@ -77,6 +79,7 @@ via tsup to ESM. Committed lockfile. `engines`, `bin`, `files`, `exports` config
 - `env`
 
 `~/.claude/.credentials.json`:
+
 - hash + file mode + size + mtime only — contents never read into the baseline.
 
 ## Architecture
@@ -158,6 +161,7 @@ side effects. It diffs current state vs baseline, then classifies each change
 deterministically (no LLM). Severities:
 
 **CRITICAL**
+
 - An MCP endpoint repointed to localhost / 127.0.0.1 / 0.0.0.0 + port (the Mitiga
   signature).
 - An MCP `command` / `args` now contains remote-exec / pipe-to-shell patterns:
@@ -165,6 +169,7 @@ deterministically (no LLM). Severities:
 - A new SessionStart hook was injected (the Shai-Hulud persistence signature).
 
 **HIGH**
+
 - An MCP endpoint host not in the user's known-good allowlist.
 - Any other new hook, or a modified existing hook command.
 - A new or changed env var that can redirect traffic (`ANTHROPIC_BASE_URL`,
@@ -175,10 +180,12 @@ deterministically (no LLM). Severities:
   URL or host.
 
 **MEDIUM**
+
 - New marketplace source; new plugin from a non-known marketplace; broadened
   `permissions` allow-list (e.g. added `Bash`, `Bash(*)`, broad globs).
 
 **INFO**
+
 - Any other tracked-field change, so nothing slips by silently.
 
 ## CLI commands
@@ -191,7 +198,7 @@ deterministically (no LLM). Severities:
 - `diff` — show current changes vs baseline.
 - `approve [--all | <id>]` — accept change(s), update baseline.
 - `install-hook` / `uninstall-hook` — wire a SessionStart hook running `claude-ward
-  scan`. Since this edits a watched file, auto-re-baseline that single change so it
+scan`. Since this edits a watched file, auto-re-baseline that single change so it
   never self-triggers.
 
 ## Error handling

@@ -4,8 +4,18 @@ import type { Change, HookEntry } from '../src/core/model.js';
 
 const cfg = { allowedHosts: [], knownMarketplaces: [] };
 
-function hookChange(kind: Change['kind'], hook: Partial<HookEntry>, before?: Partial<HookEntry>): Change {
-  const value = { source: 'settings', event: 'SessionStart', command: 'x', index: 0, ...hook } as HookEntry;
+function hookChange(
+  kind: Change['kind'],
+  hook: Partial<HookEntry>,
+  before?: Partial<HookEntry>,
+): Change {
+  const value = {
+    source: 'settings',
+    event: 'SessionStart',
+    command: 'x',
+    index: 0,
+    ...hook,
+  } as HookEntry;
   return { kind, category: 'hook', path: `hook/settings/${value.event}/#0`, after: value, before };
 }
 
@@ -16,17 +26,25 @@ describe('ruleSessionStartHookInjected', () => {
   });
 
   it('does not fire for an added PreToolUse hook', () => {
-    expect(ruleSessionStartHookInjected(hookChange('added', { event: 'PreToolUse' }), cfg)).toBeNull();
+    expect(
+      ruleSessionStartHookInjected(hookChange('added', { event: 'PreToolUse' }), cfg),
+    ).toBeNull();
   });
 });
 
 describe('ruleHookChange', () => {
   it('flags any other new hook as HIGH', () => {
-    expect(ruleHookChange(hookChange('added', { event: 'PreToolUse', command: 'echo' }), cfg)?.severity).toBe('HIGH');
+    expect(
+      ruleHookChange(hookChange('added', { event: 'PreToolUse', command: 'echo' }), cfg)?.severity,
+    ).toBe('HIGH');
   });
 
   it('flags a modified hook command as HIGH', () => {
-    const change = hookChange('modified', { event: 'PreToolUse', command: 'new' }, { command: 'old' });
+    const change = hookChange(
+      'modified',
+      { event: 'PreToolUse', command: 'new' },
+      { command: 'old' },
+    );
     expect(ruleHookChange(change, cfg)?.severity).toBe('HIGH');
   });
 

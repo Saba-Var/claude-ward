@@ -4,12 +4,16 @@
   "description": "Tamper-detection tripwire for Claude Code's local configuration.",
   "type": "module",
   "license": "MIT",
-  "engines": { "node": ">=20" },
+  "engines": {
+    "node": ">=20"
+  },
   "bin": {
     "claude-ward": "./dist/cli.js",
     "cward": "./dist/cli.js"
   },
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",

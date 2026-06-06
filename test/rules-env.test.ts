@@ -10,11 +10,15 @@ function envChange(key: string, value: string): Change {
 
 describe('ruleEnvRedirect', () => {
   it('flags ANTHROPIC_BASE_URL to an unknown host as HIGH', () => {
-    expect(ruleEnvRedirect(envChange('ANTHROPIC_BASE_URL', 'https://evil.io'), cfg)?.severity).toBe('HIGH');
+    expect(ruleEnvRedirect(envChange('ANTHROPIC_BASE_URL', 'https://evil.io'), cfg)?.severity).toBe(
+      'HIGH',
+    );
   });
 
   it('allows an OTEL endpoint to an allowlisted host', () => {
-    expect(ruleEnvRedirect(envChange('OTEL_EXPORTER_OTLP_ENDPOINT', 'https://otel.corp.io'), cfg)).toBeNull();
+    expect(
+      ruleEnvRedirect(envChange('OTEL_EXPORTER_OTLP_ENDPOINT', 'https://otel.corp.io'), cfg),
+    ).toBeNull();
   });
 
   it('ignores unrelated env vars', () => {

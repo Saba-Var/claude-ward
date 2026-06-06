@@ -31,12 +31,15 @@ describe('runRules end-to-end via fixtures', () => {
     expect(runRules(diff(before, before), deriveConfig(before))).toEqual([]);
   });
 
-  it('localhost repoint is CRITICAL', () => expect(topSeverity('localhostRepoint')).toBe('CRITICAL'));
+  it('localhost repoint is CRITICAL', () =>
+    expect(topSeverity('localhostRepoint')).toBe('CRITICAL'));
   it('curl pipe shell is CRITICAL', () => expect(topSeverity('curlPipeShell')).toBe('CRITICAL'));
-  it('injected SessionStart hook is CRITICAL', () => expect(topSeverity('sessionStartHook')).toBe('CRITICAL'));
+  it('injected SessionStart hook is CRITICAL', () =>
+    expect(topSeverity('sessionStartHook')).toBe('CRITICAL'));
   it('generic new hook is HIGH', () => expect(topSeverity('newHook')).toBe('HIGH'));
   it('new marketplace is MEDIUM', () => expect(topSeverity('newMarketplace')).toBe('MEDIUM'));
-  it('broadened permissions is MEDIUM', () => expect(topSeverity('broadenedPermissions')).toBe('MEDIUM'));
+  it('broadened permissions is MEDIUM', () =>
+    expect(topSeverity('broadenedPermissions')).toBe('MEDIUM'));
   it('benign change is INFO', () => expect(topSeverity('benign')).toBe('INFO'));
 
   // Lock the *intended* rule for each scenario, so a future reorder or a new

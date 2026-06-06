@@ -11,7 +11,9 @@ export function loadConfig(raw: unknown): WardConfig {
   if (!raw || typeof raw !== 'object') return base;
   const obj = raw as Record<string, unknown>;
   return {
-    allowedHosts: Array.isArray(obj.allowedHosts) ? (obj.allowedHosts as string[]) : base.allowedHosts,
+    allowedHosts: Array.isArray(obj.allowedHosts)
+      ? (obj.allowedHosts as string[])
+      : base.allowedHosts,
     knownMarketplaces: Array.isArray(obj.knownMarketplaces)
       ? (obj.knownMarketplaces as string[])
       : base.knownMarketplaces,
