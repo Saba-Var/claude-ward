@@ -1,0 +1,39 @@
+name: Release
+
+on:
+  push:
+    branches: [main]
+
+# contents/pull-requests let release-please open its release PR and, on merge,
+# create the tag and GitHub release. id-token is for npm Trusted Publishing.
+permissions:
+  contents: write
+  pull-requests: write
+  id-token: write
+
+jobs:
+  release-please:
+    runs-on: ubuntu-latest
+    steps:
+      # On a normal push this just opens/updates the release PR. When that PR is
+      # merged, this same run creates the release and sets release_created=true.
+      - uses: googleapis/release-please-action@v4
+        id: release
+
+      # Everything below runs only on the push that merged the release PR, so
+      # the publish happens exactly once per version.
+      - uses: actions/checkout@v4
+        if: ${{ steps.release.outputs.release_created }}
+      - uses: actions/setup-node@v4
+        if: ${{ steps.release.outputs.release_created }}
+        with:
+          node-version: 20
+          cache: npm
+          registry-url: https://registry.npmjs.org
+      # Trusted Publishing needs a recent npm; prepublishOnly re-runs the full gate.
+      - run: npm install -g npm@latest
+        if: ${{ steps.release.outputs.release_created }}
+      - run: npm ci
+        if: ${{ steps.release.outputs.release_created }}
+      - run: npm publish --provenance --access public
+        if: ${{ steps.release.outputs.release_created }}
