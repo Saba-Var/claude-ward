@@ -1,6 +1,7 @@
 import { sha256 } from './hash.js'
 import {
   type CredentialMeta,
+  type EnvEntry,
   type HookEntry,
   type McpServerEntry,
   type PermissionEntry,
@@ -141,7 +142,7 @@ function collectPermissions(...sources: Record<string, unknown>[]): PermissionEn
   return out
 }
 
-function collectEnv(...sources: Record<string, unknown>[]): { key: string; value: string }[] {
+function collectEnv(...sources: Record<string, unknown>[]): EnvEntry[] {
   const merged = new Map<string, string>()
   for (const src of sources) {
     const env = asObject(src.env)

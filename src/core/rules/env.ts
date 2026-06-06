@@ -1,4 +1,4 @@
-import type { Change, EnvEntry, Finding, WardConfig } from '../model.js'
+import type { Change, Finding, WardConfig } from '../model.js'
 import { findingId } from './index.js'
 
 const REDIRECT_KEYS = new Set(['ANTHROPIC_BASE_URL', 'OTEL_EXPORTER_OTLP_ENDPOINT'])
@@ -13,8 +13,8 @@ function host(value: string): string | undefined {
 
 export function ruleEnvRedirect(change: Change, cfg: WardConfig): Finding | null {
   if (change.category !== 'env' || change.kind === 'removed') return null
-  const after = change.after as EnvEntry
-  if (!REDIRECT_KEYS.has(after.key)) return null
+  const after = change.after
+  if (!after || !REDIRECT_KEYS.has(after.key)) return null
   const h = host(after.value)
   if (h && cfg.allowedHosts.includes(h)) return null
   return {

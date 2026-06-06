@@ -4,19 +4,23 @@ import type { Change, HookEntry } from '../src/core/model.js'
 
 const cfg = { allowedHosts: [], knownMarketplaces: [] }
 
+function hook(p: Partial<HookEntry>): HookEntry {
+  return { source: 'settings', event: 'SessionStart', command: 'x', index: 0, ...p }
+}
+
 function hookChange(
   kind: Change['kind'],
-  hook: Partial<HookEntry>,
+  after: Partial<HookEntry>,
   before?: Partial<HookEntry>,
 ): Change {
-  const value = {
-    source: 'settings',
-    event: 'SessionStart',
-    command: 'x',
-    index: 0,
-    ...hook,
-  } as HookEntry
-  return { kind, category: 'hook', path: `hook/settings/${value.event}/#0`, after: value, before }
+  const value = hook(after)
+  return {
+    kind,
+    category: 'hook',
+    path: `hook/settings/${value.event}/#0`,
+    after: value,
+    before: before ? hook(before) : undefined,
+  }
 }
 
 describe('ruleSessionStartHookInjected', () => {

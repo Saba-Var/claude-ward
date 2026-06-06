@@ -1,4 +1,4 @@
-import type { Change, CredentialMeta, Finding, WardConfig } from '../model.js'
+import type { Change, Finding, WardConfig } from '../model.js'
 import { findingId } from './index.js'
 
 function isGroupOrWorldReadable(mode: number | undefined): boolean {
@@ -7,7 +7,7 @@ function isGroupOrWorldReadable(mode: number | undefined): boolean {
 
 export function ruleCredentials(change: Change, _cfg: WardConfig): Finding | null {
   if (change.category !== 'credentials') return null
-  const after = change.after as CredentialMeta | undefined
+  const after = change.after
   if (change.kind === 'added' || !after) return null
 
   if (isGroupOrWorldReadable(after.mode)) {

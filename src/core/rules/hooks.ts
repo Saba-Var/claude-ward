@@ -1,4 +1,4 @@
-import type { Change, Finding, HookEntry, WardConfig } from '../model.js'
+import type { Change, Finding, WardConfig } from '../model.js'
 import { findingId } from './index.js'
 
 function make(
@@ -13,7 +13,7 @@ function make(
 
 export function ruleSessionStartHookInjected(change: Change, _cfg: WardConfig): Finding | null {
   if (change.category !== 'hook' || change.kind !== 'added') return null
-  const after = change.after as HookEntry | undefined
+  const after = change.after
   if (!after || after.event !== 'SessionStart') return null
   return make(
     'hook.sessionstart-injected',
@@ -26,7 +26,7 @@ export function ruleSessionStartHookInjected(change: Change, _cfg: WardConfig): 
 
 export function ruleHookChange(change: Change, _cfg: WardConfig): Finding | null {
   if (change.category !== 'hook') return null
-  const after = change.after as HookEntry | undefined
+  const after = change.after
   if (change.kind === 'added') {
     if (after?.event === 'SessionStart') return null
     return make(

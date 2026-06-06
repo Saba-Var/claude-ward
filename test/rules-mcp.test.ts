@@ -4,12 +4,26 @@ import {
   ruleMcpLocalhostRepoint,
   ruleMcpRemoteExec,
 } from '../src/core/rules/mcp.js'
-import type { Change } from '../src/core/model.js'
+import type { Change, McpServerEntry } from '../src/core/model.js'
 
 const cfg = { allowedHosts: ['api.github.com'], knownMarketplaces: [] }
 
-function mcpChange(kind: Change['kind'], after: unknown, before?: unknown): Change {
-  return { kind, category: 'mcpServer', path: 'mcpServer/global//gh', before, after }
+function server(p: Partial<McpServerEntry>): McpServerEntry {
+  return { scope: 'global', name: 'gh', ...p }
+}
+
+function mcpChange(
+  kind: Change['kind'],
+  after: Partial<McpServerEntry>,
+  before?: Partial<McpServerEntry>,
+): Change {
+  return {
+    kind,
+    category: 'mcpServer',
+    path: 'mcpServer/global//gh',
+    before: before ? server(before) : undefined,
+    after: server(after),
+  }
 }
 
 describe('ruleMcpLocalhostRepoint', () => {

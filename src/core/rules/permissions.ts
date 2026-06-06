@@ -1,4 +1,4 @@
-import type { Change, Finding, PermissionEntry, WardConfig } from '../model.js'
+import type { Change, Finding, WardConfig } from '../model.js'
 import { findingId } from './index.js'
 
 function isBroad(entry: string): boolean {
@@ -19,8 +19,8 @@ function isBroad(entry: string): boolean {
 
 export function ruleBroadenedPermissions(change: Change, _cfg: WardConfig): Finding | null {
   if (change.category !== 'permission' || change.kind !== 'added') return null
-  const after = change.after as PermissionEntry
-  if (after.list !== 'allow' || !isBroad(after.entry)) return null
+  const after = change.after
+  if (!after || after.list !== 'allow' || !isBroad(after.entry)) return null
   return {
     id: findingId('permissions.broadened', change.path),
     ruleId: 'permissions.broadened',

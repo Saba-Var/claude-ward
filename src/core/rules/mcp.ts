@@ -1,4 +1,4 @@
-import type { Change, Finding, McpServerEntry, WardConfig } from '../model.js'
+import type { Change, Finding, WardConfig } from '../model.js'
 import { findingId } from './index.js'
 
 // URL.hostname returns the IPv6 loopback bracketed, so both forms are listed.
@@ -39,8 +39,9 @@ function make(
 
 export function ruleMcpLocalhostRepoint(change: Change, _cfg: WardConfig): Finding | null {
   if (change.category !== 'mcpServer' || change.kind === 'removed') return null
-  const after = change.after as McpServerEntry
-  const before = change.before as McpServerEntry | undefined
+  const after = change.after
+  if (!after) return null
+  const before = change.before
   if (!isLocal(after.url)) return null
   if (change.kind === 'modified' && isLocal(before?.url)) return null
   return make(
@@ -54,7 +55,8 @@ export function ruleMcpLocalhostRepoint(change: Change, _cfg: WardConfig): Findi
 
 export function ruleMcpRemoteExec(change: Change, _cfg: WardConfig): Finding | null {
   if (change.category !== 'mcpServer' || change.kind === 'removed') return null
-  const after = change.after as McpServerEntry
+  const after = change.after
+  if (!after) return null
   const text = [after.command ?? '', ...(after.args ?? [])].join(' ')
   if (!REMOTE_EXEC_PATTERNS.some((re) => re.test(text))) return null
   return make(
@@ -68,7 +70,8 @@ export function ruleMcpRemoteExec(change: Change, _cfg: WardConfig): Finding | n
 
 export function ruleMcpHostNotAllowlisted(change: Change, cfg: WardConfig): Finding | null {
   if (change.category !== 'mcpServer' || change.kind === 'removed') return null
-  const after = change.after as McpServerEntry
+  const after = change.after
+  if (!after) return null
   const h = host(after.url)
   if (!h || LOCAL_HOSTS.has(h) || cfg.allowedHosts.includes(h)) return null
   return make(
