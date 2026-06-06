@@ -45,6 +45,38 @@ describe('collect', () => {
     ])
   })
 
+  it('collects a hook written as a bare group and labels its source', () => {
+    const state = collect({
+      claudeJson: { hooks: { SessionStart: [{ command: 'run-me' }] } },
+    })
+    expect(state.hooks).toEqual([
+      {
+        source: 'claude.json',
+        event: 'SessionStart',
+        matcher: undefined,
+        command: 'run-me',
+        index: 0,
+      },
+    ])
+  })
+
+  it('indexes hooks per matcher so distinct matchers do not collide', () => {
+    const state = collect({
+      settings: {
+        hooks: {
+          PreToolUse: [
+            { matcher: 'Bash', hooks: [{ command: 'a' }] },
+            { matcher: 'Read', hooks: [{ command: 'b' }] },
+          ],
+        },
+      },
+    })
+    expect(state.hooks).toEqual([
+      { source: 'settings', event: 'PreToolUse', matcher: 'Bash', command: 'a', index: 0 },
+      { source: 'settings', event: 'PreToolUse', matcher: 'Read', command: 'b', index: 0 },
+    ])
+  })
+
   it('normalizes plugins, marketplaces and permissions', () => {
     const state = collect({
       settings: {

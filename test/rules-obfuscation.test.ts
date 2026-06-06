@@ -59,4 +59,24 @@ describe('ruleObfuscation', () => {
     }
     expect(ruleObfuscation(change, cfg)).toBeNull()
   })
+
+  it('does not flag a base64 run shorter than the threshold', () => {
+    const change: Change = {
+      kind: 'added',
+      category: 'env',
+      path: 'env/X',
+      after: { key: 'X', value: 'A'.repeat(39) }, // one under the 40-char blob threshold
+    }
+    expect(ruleObfuscation(change, cfg)).toBeNull()
+  })
+
+  it('does not flag non-ASCII in a value that is not URL-like', () => {
+    const change: Change = {
+      kind: 'added',
+      category: 'env',
+      path: 'env/GREETING',
+      after: { key: 'GREETING', value: 'café' },
+    }
+    expect(ruleObfuscation(change, cfg)).toBeNull()
+  })
 })

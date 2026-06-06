@@ -78,4 +78,44 @@ describe('diff', () => {
     expect(next.mcpServers).toHaveLength(1)
     expect(diff(next, withServer('https://a.io'))).toEqual([])
   })
+
+  it('applying every diff converges the baseline on the target across all categories', () => {
+    const before: TrackedState = {
+      mcpServers: [
+        { scope: 'global', name: 'keep', url: 'https://k.io' },
+        { scope: 'global', name: 'drop', url: 'https://d.io' },
+      ],
+      hooks: [
+        { source: 'settings', event: 'PreToolUse', matcher: 'Bash', command: 'old', index: 0 },
+      ],
+      plugins: ['p@m'],
+      marketplaces: ['m1'],
+      permissions: [{ list: 'allow', entry: 'Read' }],
+      env: [{ key: 'A', value: '1' }],
+      credentials: { present: true, hash: 'a', mode: 0o600 },
+    }
+    const after: TrackedState = {
+      mcpServers: [
+        { scope: 'global', name: 'keep', url: 'https://k.io' },
+        { scope: 'global', name: 'new', url: 'https://n.io' },
+      ],
+      hooks: [
+        { source: 'settings', event: 'PreToolUse', matcher: 'Bash', command: 'new', index: 0 },
+      ],
+      plugins: ['p@m', 'q@m'],
+      marketplaces: [],
+      permissions: [
+        { list: 'allow', entry: 'Read' },
+        { list: 'deny', entry: 'Bash' },
+      ],
+      env: [
+        { key: 'A', value: '2' },
+        { key: 'B', value: '3' },
+      ],
+      credentials: { present: true, hash: 'b', mode: 0o600 },
+    }
+    let state = before
+    for (const c of diff(before, after)) state = applyChange(state, c)
+    expect(diff(state, after)).toEqual([])
+  })
 })
