@@ -7,8 +7,8 @@ function make(ruleId: string, severity: Finding['severity'], title: string, deta
 
 export function ruleSessionStartHookInjected(change: Change, _cfg: WardConfig): Finding | null {
   if (change.category !== 'hook' || change.kind !== 'added') return null;
-  const after = change.after as HookEntry;
-  if (after.event !== 'SessionStart') return null;
+  const after = change.after as HookEntry | undefined;
+  if (!after || after.event !== 'SessionStart') return null;
   return make(
     'hook.sessionstart-injected',
     'CRITICAL',
