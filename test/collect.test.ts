@@ -60,6 +60,35 @@ describe('collect', () => {
     expect(state.env).toEqual([{ key: 'ANTHROPIC_BASE_URL', value: 'https://x.io' }]);
   });
 
+  it('redacts secret env and mcp-env values but keeps endpoint keys raw', () => {
+    const state = collect({
+      claudeJson: {
+        mcpServers: { gh: { url: 'https://api.github.com/mcp', env: { GITHUB_TOKEN: 'ghp_supersecret' } } },
+      },
+      settings: {
+        env: { ANTHROPIC_BASE_URL: 'https://proxy.io', ANTHROPIC_API_KEY: 'sk-ant-secret-value' },
+      },
+    });
+
+    // Endpoint key kept raw (rules need the host); the API key is never stored raw.
+    const baseUrl = state.env.find((e) => e.key === 'ANTHROPIC_BASE_URL');
+    const apiKey = state.env.find((e) => e.key === 'ANTHROPIC_API_KEY');
+    expect(baseUrl?.value).toBe('https://proxy.io');
+    expect(apiKey?.value).not.toContain('sk-ant-secret-value');
+    expect(apiKey?.value).toMatch(/^redacted:sha256:[0-9a-f]{12}$/);
+
+    // mcp env token is redacted; the raw secret never appears anywhere in state.
+    expect(state.mcpServers[0]?.env?.GITHUB_TOKEN).not.toContain('ghp_supersecret');
+    expect(JSON.stringify(state)).not.toContain('ghp_supersecret');
+    expect(JSON.stringify(state)).not.toContain('sk-ant-secret-value');
+  });
+
+  it('redaction is stable for the same value (so unchanged secrets do not diff)', () => {
+    const a = collect({ settings: { env: { TOKEN: 'abc' } } });
+    const b = collect({ settings: { env: { TOKEN: 'abc' } } });
+    expect(a.env).toEqual(b.env);
+  });
+
   it('passes credential meta through unchanged', () => {
     const state = collect({ credentials: { present: true, hash: 'abc', mode: 0o600, size: 10 } });
     expect(state.credentials).toEqual({ present: true, hash: 'abc', mode: 0o600, size: 10 });
