@@ -10,9 +10,11 @@ Everything here is a pure function: same input, same output, no side effects.
 - **Deterministic and total.** Handle malformed/partial input by returning empty or
   safe defaults (`asObject`, `asArray` helpers), never by throwing on bad data.
 - **Secret-safe by construction.** `collect.ts` must redact token/API-key values to a
-  short hash marker before they enter `TrackedState`. Only the URL-valued env keys the
-  rules inspect (`ANTHROPIC_BASE_URL`, `OTEL_EXPORTER_OTLP_ENDPOINT`) stay raw. If a new
-  field could carry a secret, hash it.
+  short hash marker before they enter `TrackedState`. The URL-valued fields the rules
+  inspect (MCP `url`, and the `ANTHROPIC_BASE_URL` / `OTEL_EXPORTER_OTLP_ENDPOINT` env
+  keys) stay raw so host extraction works, but `sanitizeUrl` first strips any userinfo
+  and query string, which can carry credentials. If a new field could carry a secret,
+  hash it or sanitize it.
 
 The flow is `collect -> diff -> rules`. Keep each stage independently testable. Every
 function here should have a direct unit test in `test/`.

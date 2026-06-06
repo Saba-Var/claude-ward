@@ -89,6 +89,23 @@ describe('collect', () => {
     expect(JSON.stringify(state)).not.toContain('sk-ant-secret-value')
   })
 
+  it('strips userinfo and query secrets from URL-valued fields', () => {
+    const state = collect({
+      claudeJson: {
+        mcpServers: { gh: { url: 'https://user:p4ss@api.evil.io/mcp?api_key=AKIAABCDEF' } },
+      },
+      settings: { env: { ANTHROPIC_BASE_URL: 'https://tok@proxy.io/?key=sk-secret' } },
+    })
+    const url = state.mcpServers[0]?.url ?? ''
+    expect(url).not.toContain('p4ss')
+    expect(url).not.toContain('AKIAABCDEF')
+    expect(url).toContain('api.evil.io') // host preserved for the rules
+    expect(url).toContain('redacted@') // but credentials-present marker kept
+    const baseUrl = state.env.find((e) => e.key === 'ANTHROPIC_BASE_URL')?.value ?? ''
+    expect(baseUrl).not.toContain('sk-secret')
+    expect(JSON.stringify(state)).not.toContain('sk-secret')
+  })
+
   it('redaction is stable for the same value (so unchanged secrets do not diff)', () => {
     const a = collect({ settings: { env: { TOKEN: 'abc' } } })
     const b = collect({ settings: { env: { TOKEN: 'abc' } } })
