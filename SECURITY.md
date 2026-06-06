@@ -19,8 +19,9 @@ tracks that match known attack patterns:
   persistence - the Shai-Hulud technique.
 - MCP hosts and traffic-redirecting environment variables (`ANTHROPIC_BASE_URL`,
   `OTEL_EXPORTER_OTLP_ENDPOINT`) pointed at hosts you have not allowlisted.
-- The OAuth credential file changing unexpectedly, or its permissions loosening to be
-  readable by other users.
+- The OAuth credential file changing unexpectedly, its permissions loosening to be
+  readable by other users, or it becoming unreadable (a tamper that would otherwise look
+  like a logout).
 - New marketplace sources, plugins from unknown marketplaces, and broadened permission
   allow-lists.
 
@@ -46,17 +47,21 @@ tracks that match known attack patterns:
 
 claude-ward never stores secret values. The credential file is recorded only as a SHA-256
 hash plus its file mode and size. Token and API-key values found in `env` blocks are
-hashed before they reach the baseline. The baseline in `~/.claude-ward/baseline.json`
-contains enough to detect change and not enough to leak a credential.
+hashed before they reach the baseline. URL-valued fields are kept so the rules can read
+the host, but any userinfo (`user:pass@`) or query string is stripped first, since those
+can carry credentials. The baseline in `~/.claude-ward/baseline.json` contains enough to
+detect change and not enough to leak a credential, and is written owner-only (mode 600).
 
 ## claude-ward's own supply chain
 
 The irony of a tool that defends against npm supply-chain attacks shipping as an npm
-package is not lost on us. Mitigations: dependencies are kept few and are pinned by a
-committed lockfile; the core (snapshot, diff, rules) makes no network calls. The one
-heavier transitive dependency is `node-notifier` (desktop notifications); if you would
-rather not pull it in, the notifier is optional at runtime - claude-ward falls back to
-terminal output and still functions fully without a working notification backend.
+package is not lost on us. Mitigations: dependencies are kept few, with exact versions
+locked in a committed `package-lock.json` and CI installing via `npm ci`; releases are
+published with npm provenance; and the core (snapshot, diff, rules) makes no network
+calls. The one heavier transitive dependency is `node-notifier` (desktop notifications);
+if you would rather not pull it in, the notifier is optional at runtime - claude-ward
+falls back to terminal output and still functions fully without a working notification
+backend.
 
 ## Reporting a vulnerability
 

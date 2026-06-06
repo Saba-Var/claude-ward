@@ -6,6 +6,32 @@ All notable changes to this project are documented here. The format is based on
 
 ## [Unreleased]
 
+### Security
+
+- Close loopback-repoint evasions: localhost detection now covers the whole
+  `127.0.0.0/8` range, trailing-dot hosts, and IPv4-mapped IPv6, via a shared host
+  canonicalizer the rules and the allowlist agree on.
+- Make diff keys injective so a colliding decoy entry can no longer supply a fake
+  "before" that suppresses a real CRITICAL finding.
+- `install-hook` no longer overwrites a malformed `settings.json` and re-baselines only
+  the hook line it wrote, instead of blanket-trusting every pending change.
+- Flag a credential file that becomes unreadable as a tamper rather than reading it as a
+  logout; strip userinfo and query strings from stored URLs; write ward state owner-only.
+
+### Added
+
+- Detection for in-place `SessionStart` hook rewrites (CRITICAL), bare MCP tool grants
+  like `mcp__server` (MEDIUM), and more remote-exec forms (command substitution, pipe to
+  an interpreter, `nc -e`).
+- Atomic, validated baseline reads/writes; `diff` and `watch` now surface read warnings.
+- npm release workflow with provenance, a Node 20/22/24 CI matrix, and dependabot.
+
+### Changed
+
+- `Change` is now a discriminated union keyed on category, removing unchecked casts
+  across the rule engine.
+- `--version` is read from `package.json` so it cannot drift.
+
 ## [0.1.0] - 2026-06-06
 
 ### Added
