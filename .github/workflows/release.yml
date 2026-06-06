@@ -19,6 +19,9 @@ jobs:
           node-version: 20
           cache: npm
           registry-url: https://registry.npmjs.org
+      # Trusted Publishing authenticates over OIDC instead of a token, and
+      # needs a recent npm. The id-token permission above is what it relies on.
+      - run: npm install -g npm@latest
       - run: npm ci
       - run: npm run typecheck
       - run: npm run lint
@@ -26,5 +29,3 @@ jobs:
       - run: npm run build
       # prepublishOnly re-runs the gate; --provenance pairs with id-token above.
       - run: npm publish --provenance --access public
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
