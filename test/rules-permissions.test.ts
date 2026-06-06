@@ -33,4 +33,14 @@ describe('ruleBroadenedPermissions', () => {
   it('ignores additions to the deny list', () => {
     expect(ruleBroadenedPermissions(permChange('added', 'deny', 'Bash'), cfg)).toBeNull()
   })
+
+  it('flags a bare MCP server grant (mcp__server__tool) as MEDIUM', () => {
+    expect(
+      ruleBroadenedPermissions(permChange('added', 'allow', 'mcp__github__create_issue'), cfg)
+        ?.severity,
+    ).toBe('MEDIUM')
+    expect(
+      ruleBroadenedPermissions(permChange('added', 'allow', 'mcp__github'), cfg)?.severity,
+    ).toBe('MEDIUM')
+  })
 })

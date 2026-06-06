@@ -12,16 +12,30 @@ function make(
 }
 
 export function ruleSessionStartHookInjected(change: Change, _cfg: WardConfig): Finding | null {
-  if (change.category !== 'hook' || change.kind !== 'added') return null
+  if (change.category !== 'hook') return null
   const after = change.after
   if (!after || after.event !== 'SessionStart') return null
-  return make(
-    'hook.sessionstart-injected',
-    'CRITICAL',
-    'SessionStart hook injected',
-    `A new SessionStart hook was added (${after.source}): ${after.command}. This matches the Shai-Hulud persistence signature.`,
-    change,
-  )
+  if (change.kind === 'added') {
+    return make(
+      'hook.sessionstart-injected',
+      'CRITICAL',
+      'SessionStart hook injected',
+      `A new SessionStart hook was added (${after.source}): ${after.command}. This matches the Shai-Hulud persistence signature.`,
+      change,
+    )
+  }
+  // An in-place rewrite of an existing SessionStart command is the same
+  // persistence outcome as injecting one, so it is CRITICAL too, not HIGH.
+  if (change.kind === 'modified' && change.before?.command !== after.command) {
+    return make(
+      'hook.sessionstart-modified',
+      'CRITICAL',
+      'SessionStart hook command changed',
+      `An existing SessionStart hook command was rewritten (${after.source}): ${after.command}. This matches the Shai-Hulud persistence signature.`,
+      change,
+    )
+  }
+  return null
 }
 
 export function ruleHookChange(change: Change, _cfg: WardConfig): Finding | null {

@@ -3,10 +3,17 @@ import type { Change, Finding, WardConfig } from '../model.js'
 import { findingId } from './index.js'
 
 const SHELLS = '(sh|bash|zsh|ksh|dash)'
+const INTERP = '(python[0-9.]*|perl|ruby|node|php)'
 const REMOTE_EXEC_PATTERNS: RegExp[] = [
   new RegExp(`\\bcurl\\b[^\\n]*\\|\\s*${SHELLS}\\b`, 'i'),
   new RegExp(`\\bwget\\b[^\\n]*\\|\\s*${SHELLS}\\b`, 'i'),
-  new RegExp(`\\|\\s*${SHELLS}\\b`),
+  new RegExp(`\\|\\s*${SHELLS}\\b`, 'i'), // also catches "| Bash", "| SH"
+  // Command substitution that wraps a downloader: sh -c "$(curl ...)".
+  new RegExp(`\\b${SHELLS}\\b[^\\n]*\\$\\((?:[^)]*\\b(?:curl|wget)\\b)`, 'i'),
+  // A downloader piped into a scripting interpreter, or one run inline.
+  new RegExp(`\\b(?:curl|wget)\\b[^\\n]*\\|\\s*${INTERP}\\b`, 'i'),
+  new RegExp(`\\b${INTERP}\\b\\s+-(?:c|e)\\b`, 'i'), // python -c, node -e, perl -e
+  /\bnc\b[^\n]*\s-e\b/i, // netcat reverse shell
   /\beval\b/,
   /base64\s+-{1,2}d/i, // -d, -D (macOS default), --decode, -di
 ]

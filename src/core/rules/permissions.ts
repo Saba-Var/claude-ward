@@ -3,10 +3,11 @@ import { findingId } from './index.js'
 
 function isBroad(entry: string): boolean {
   if (entry === '*') return true
-  // Bare tool name (no parenthesised scope) = unrestricted
-  if (/^[A-Za-z][A-Za-z0-9]*$/.test(entry)) return true
+  // Bare tool name (no parenthesised scope) = unrestricted. Underscores are
+  // allowed so Claude Code's MCP grants (mcp__server, mcp__server__tool) count.
+  if (/^[A-Za-z][A-Za-z0-9_]*$/.test(entry)) return true
   // Scoped entry: ToolName(scope) - broad only when scope is a bare wildcard (no path context)
-  const match = /^[A-Za-z][A-Za-z0-9]*\((.+)\)$/.exec(entry)
+  const match = /^[A-Za-z][A-Za-z0-9_]*\((.+)\)$/.exec(entry)
   if (match !== null) {
     const scope: string = match[1] ?? ''
     // A scope that starts with '.' or '/' or a word-char followed by '/' is a specific path - narrow
