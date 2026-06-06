@@ -22,7 +22,7 @@ jobs:
 
       # Everything below runs only on the push that merged the release PR, so
       # the publish happens exactly once per version.
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         if: ${{ steps.release.outputs.release_created }}
       - uses: actions/setup-node@v4
         if: ${{ steps.release.outputs.release_created }}
