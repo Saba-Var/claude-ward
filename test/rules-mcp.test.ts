@@ -59,6 +59,16 @@ describe('ruleMcpLocalhostRepoint', () => {
     )
     expect(ruleMcpLocalhostRepoint(change, cfg)?.severity).toBe('CRITICAL')
   })
+
+  it.each([
+    ['127.0.0.0/8 outside .1', 'http://127.0.0.2:8080'],
+    ['trailing-dot localhost', 'http://localhost.:8080'],
+    ['IPv4-mapped IPv6 loopback', 'http://[::ffff:127.0.0.1]:8080'],
+    ['decimal-encoded loopback', 'http://2130706433:8080'],
+  ])('detects the %s evasion form as CRITICAL', (_label, url) => {
+    const change = mcpChange('modified', { url }, { url: 'https://api.github.com/mcp' })
+    expect(ruleMcpLocalhostRepoint(change, cfg)?.severity).toBe('CRITICAL')
+  })
 })
 
 describe('ruleMcpRemoteExec', () => {
@@ -110,5 +120,20 @@ describe('ruleMcpHostNotAllowlisted', () => {
     expect(
       ruleMcpHostNotAllowlisted(mcpChange('added', { url: 'http://[::1]:8080' }), cfg),
     ).toBeNull()
+  })
+
+  it('does not false-positive on a trailing-dot spelling of an allowlisted host', () => {
+    expect(
+      ruleMcpHostNotAllowlisted(mcpChange('added', { url: 'https://api.github.com./mcp' }), cfg),
+    ).toBeNull()
+  })
+
+  it('flags credentials embedded in the URL even when the host is allowlisted', () => {
+    const finding = ruleMcpHostNotAllowlisted(
+      mcpChange('added', { url: 'https://evil@api.github.com/mcp' }),
+      cfg,
+    )
+    expect(finding?.severity).toBe('HIGH')
+    expect(finding?.ruleId).toBe('mcp.url-userinfo')
   })
 })

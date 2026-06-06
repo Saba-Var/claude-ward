@@ -1,8 +1,6 @@
+import { hostOf, isLoopbackHost, parseUrl } from '../host.js'
 import type { Change, Finding, WardConfig } from '../model.js'
 import { findingId } from './index.js'
-
-// URL.hostname returns the IPv6 loopback bracketed, so both forms are listed.
-const LOCAL_HOSTS = new Set(['localhost', '127.0.0.1', '0.0.0.0', '::1', '[::1]'])
 
 const SHELLS = '(sh|bash|zsh|ksh|dash)'
 const REMOTE_EXEC_PATTERNS: RegExp[] = [
@@ -13,18 +11,9 @@ const REMOTE_EXEC_PATTERNS: RegExp[] = [
   /base64\s+-{1,2}d/i, // -d, -D (macOS default), --decode, -di
 ]
 
-function host(url: string | undefined): string | undefined {
-  if (!url) return undefined
-  try {
-    return new URL(url).hostname
-  } catch {
-    return undefined
-  }
-}
-
 function isLocal(url: string | undefined): boolean {
-  const h = host(url)
-  return h !== undefined && LOCAL_HOSTS.has(h)
+  const h = hostOf(url)
+  return h !== undefined && isLoopbackHost(h)
 }
 
 function make(
@@ -72,13 +61,25 @@ export function ruleMcpHostNotAllowlisted(change: Change, cfg: WardConfig): Find
   if (change.category !== 'mcpServer' || change.kind === 'removed') return null
   const after = change.after
   if (!after) return null
-  const h = host(after.url)
-  if (!h || LOCAL_HOSTS.has(h) || cfg.allowedHosts.includes(h)) return null
+  const parsed = parseUrl(after.url)
+  if (!parsed || isLoopbackHost(parsed.host)) return null
+  // Credentials embedded in the host (user:pass@) are worth flagging even when
+  // the host itself is allowlisted - they are leaked to whatever the URL hits.
+  if (parsed.hasUserinfo) {
+    return make(
+      'mcp.url-userinfo',
+      'HIGH',
+      'MCP endpoint URL embeds credentials',
+      `Server "${after.name}" points at ${parsed.host} with credentials embedded in the URL.`,
+      change,
+    )
+  }
+  if (cfg.allowedHosts.includes(parsed.host)) return null
   return make(
     'mcp.host-not-allowlisted',
     'HIGH',
     'MCP endpoint host is not in the allowlist',
-    `Server "${after.name}" points at ${h}, which is not a known-good host.`,
+    `Server "${after.name}" points at ${parsed.host}, which is not a known-good host.`,
     change,
   )
 }

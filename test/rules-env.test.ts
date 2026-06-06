@@ -24,4 +24,17 @@ describe('ruleEnvRedirect', () => {
   it('ignores unrelated env vars', () => {
     expect(ruleEnvRedirect(envChange('EDITOR', 'vim'), cfg)).toBeNull()
   })
+
+  it('flags an allowlisted host when credentials are embedded in the URL', () => {
+    expect(
+      ruleEnvRedirect(envChange('OTEL_EXPORTER_OTLP_ENDPOINT', 'https://evil@otel.corp.io'), cfg)
+        ?.severity,
+    ).toBe('HIGH')
+  })
+
+  it('does not false-positive on a trailing-dot spelling of an allowlisted host', () => {
+    expect(
+      ruleEnvRedirect(envChange('OTEL_EXPORTER_OTLP_ENDPOINT', 'https://otel.corp.io.'), cfg),
+    ).toBeNull()
+  })
 })
