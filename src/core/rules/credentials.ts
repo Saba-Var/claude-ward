@@ -12,7 +12,7 @@ export function ruleCredentials(change: Change, _cfg: WardConfig): Finding | nul
 
   if (isGroupOrWorldReadable(after.mode)) {
     return {
-      id: findingId('credentials.mode', change.path),
+      id: findingId('credentials.mode', change),
       ruleId: 'credentials.mode',
       severity: 'HIGH',
       title: 'Credentials file became group/world-readable',
@@ -22,7 +22,7 @@ export function ruleCredentials(change: Change, _cfg: WardConfig): Finding | nul
   }
   if (change.kind === 'modified') {
     return {
-      id: findingId('credentials.hash', change.path),
+      id: findingId('credentials.hash', change),
       ruleId: 'credentials.hash',
       severity: 'HIGH',
       title: 'Credentials file changed unexpectedly',

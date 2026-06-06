@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { applyChange, diff } from '../src/core/diff.js'
+import { runRules } from '../src/core/rules/index.js'
 import { type TrackedState, emptyState } from '../src/core/model.js'
 
 function withServer(url: string): TrackedState {
@@ -43,6 +44,32 @@ describe('diff', () => {
 
   it('returns no changes for identical states', () => {
     expect(diff(withServer('https://a.io'), withServer('https://a.io'))).toEqual([])
+  })
+
+  it('keeps colliding entities distinct so a decoy cannot mask a repoint', () => {
+    // Under a raw "scope:project:name" join these two key identically. An
+    // attacker plants the decoy D (already localhost) so a real remote->local
+    // repoint of V pairs with D's localhost "before" and the CRITICAL rule,
+    // which ignores always-local servers, stays silent.
+    const victim = { scope: 'global' as const, project: 'p', name: 'x:y' }
+    const decoy = { scope: 'global' as const, project: 'p:x', name: 'y' }
+    const before: TrackedState = {
+      ...emptyState(),
+      mcpServers: [
+        { ...victim, url: 'https://remote.example/mcp' },
+        { ...decoy, url: 'http://localhost:1/' },
+      ],
+    }
+    const after: TrackedState = {
+      ...emptyState(),
+      mcpServers: [
+        { ...victim, url: 'http://localhost:6666/' },
+        { ...decoy, url: 'http://localhost:1/' },
+      ],
+    }
+    const cfg = { allowedHosts: [], knownMarketplaces: [] }
+    const findings = runRules(diff(before, after), cfg)
+    expect(findings.some((f) => f.ruleId === 'mcp.localhost-repoint')).toBe(true)
   })
 
   it('applyChange folds an added server into the baseline', () => {

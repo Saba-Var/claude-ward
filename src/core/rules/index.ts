@@ -8,8 +8,10 @@ import { ruleObfuscation } from './obfuscation.js'
 import { ruleBroadenedPermissions } from './permissions.js'
 import { ruleMarketplaceOrPlugin } from './plugins.js'
 
-export function findingId(ruleId: string, path: string): string {
-  return sha256(`${ruleId}:${path}`).slice(0, 12)
+export function findingId(ruleId: string, change: Change): string {
+  // Seed from the injective `key` set by diff() (falls back to the readable
+  // path for hand-built changes) so two distinct entities never share an id.
+  return sha256(`${ruleId}:${change.key ?? change.path}`).slice(0, 12)
 }
 
 type Rule = (change: Change, cfg: WardConfig) => Finding | null
@@ -30,7 +32,7 @@ const RULES: Rule[] = [
 
 function infoFinding(change: Change): Finding {
   return {
-    id: findingId('info.tracked-change', change.path),
+    id: findingId('info.tracked-change', change),
     ruleId: 'info.tracked-change',
     severity: 'INFO',
     title: `Tracked ${change.category} ${change.kind}`,

@@ -33,26 +33,38 @@ function diffKeyed<C extends ChangeCategory, V>(
   // lets every rule and applyChange consume `Change` with no cast of its own.
   for (const a of after) {
     const b = beforeMap.get(a.key)
-    if (!b) changes.push({ kind: 'added', category, path: a.path, after: a.value } as Change)
+    if (!b)
+      changes.push({ kind: 'added', category, path: a.path, key: a.key, after: a.value } as Change)
     else if (!eq(b.value, a.value))
       changes.push({
         kind: 'modified',
         category,
         path: a.path,
+        key: a.key,
         before: b.value,
         after: a.value,
       } as Change)
   }
   for (const b of before) {
     if (!afterMap.has(b.key))
-      changes.push({ kind: 'removed', category, path: b.path, before: b.value } as Change)
+      changes.push({
+        kind: 'removed',
+        category,
+        path: b.path,
+        key: b.key,
+        before: b.value,
+      } as Change)
   }
   return changes
 }
 
+// Keys join attacker-influenceable fields (project paths, server names, hook
+// matchers), so a raw delimiter join lets two distinct entities collapse to one
+// key. JSON.stringify of an ordered tuple is injective; the readable `path`
+// stays a separate, display-only string.
 function servers(state: TrackedState): Keyed<McpServerEntry>[] {
   return state.mcpServers.map((s) => ({
-    key: `${s.scope}:${s.project ?? ''}:${s.name}`,
+    key: JSON.stringify(['mcpServer', s.scope, s.project ?? null, s.name]),
     path: `mcpServer/${s.scope}/${s.project ?? ''}/${s.name}`,
     value: s,
   }))
@@ -60,7 +72,7 @@ function servers(state: TrackedState): Keyed<McpServerEntry>[] {
 
 function hooks(state: TrackedState): Keyed<HookEntry>[] {
   return state.hooks.map((h) => ({
-    key: `${h.source}:${h.event}:${h.matcher ?? ''}:${h.index}`,
+    key: JSON.stringify(['hook', h.source, h.event, h.matcher ?? null, h.index]),
     path: `hook/${h.source}/${h.event}/${h.matcher ?? ''}#${h.index}`,
     value: h,
   }))
@@ -68,7 +80,7 @@ function hooks(state: TrackedState): Keyed<HookEntry>[] {
 
 function strings(state: TrackedState, field: 'plugins' | 'marketplaces'): Keyed<string>[] {
   return state[field].map((v) => ({
-    key: v,
+    key: JSON.stringify([field, v]),
     path: `${field === 'plugins' ? 'plugin' : 'marketplace'}/${v}`,
     value: v,
   }))
@@ -76,24 +88,26 @@ function strings(state: TrackedState, field: 'plugins' | 'marketplaces'): Keyed<
 
 function permissions(state: TrackedState): Keyed<PermissionEntry>[] {
   return state.permissions.map((p) => ({
-    key: `${p.list}:${p.entry}`,
+    key: JSON.stringify(['permission', p.list, p.entry]),
     path: `permission/${p.list}/${p.entry}`,
     value: p,
   }))
 }
 
 function env(state: TrackedState): Keyed<EnvEntry>[] {
-  return state.env.map((e) => ({ key: e.key, path: `env/${e.key}`, value: e }))
+  return state.env.map((e) => ({
+    key: JSON.stringify(['env', e.key]),
+    path: `env/${e.key}`,
+    value: e,
+  }))
 }
 
 function credChanges(before: CredentialMeta, after: CredentialMeta): Change[] {
+  const base = { category: 'credentials', path: 'credentials', key: 'credentials' } as const
   if (!before.present && !after.present) return []
-  if (!before.present && after.present)
-    return [{ kind: 'added', category: 'credentials', path: 'credentials', after }]
-  if (before.present && !after.present)
-    return [{ kind: 'removed', category: 'credentials', path: 'credentials', before }]
-  if (!eq(before, after))
-    return [{ kind: 'modified', category: 'credentials', path: 'credentials', before, after }]
+  if (!before.present && after.present) return [{ ...base, kind: 'added', after }]
+  if (before.present && !after.present) return [{ ...base, kind: 'removed', before }]
+  if (!eq(before, after)) return [{ ...base, kind: 'modified', before, after }]
   return []
 }
 

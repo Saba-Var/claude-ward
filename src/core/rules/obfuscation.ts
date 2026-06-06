@@ -46,5 +46,5 @@ function truncate(s: string): string {
 }
 
 function mk(ruleId: string, title: string, detail: string, change: Change): Finding {
-  return { id: findingId(ruleId, change.path), ruleId, severity: 'HIGH', title, detail, change }
+  return { id: findingId(ruleId, change), ruleId, severity: 'HIGH', title, detail, change }
 }

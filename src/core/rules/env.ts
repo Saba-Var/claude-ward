@@ -18,7 +18,7 @@ export function ruleEnvRedirect(change: Change, cfg: WardConfig): Finding | null
       ? ` (host ${h})`
       : ''
   return {
-    id: findingId('env.redirect', change.path),
+    id: findingId('env.redirect', change),
     ruleId: 'env.redirect',
     severity: 'HIGH',
     title: 'Traffic-redirecting env var changed',

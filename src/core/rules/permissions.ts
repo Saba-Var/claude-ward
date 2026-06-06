@@ -22,7 +22,7 @@ export function ruleBroadenedPermissions(change: Change, _cfg: WardConfig): Find
   const after = change.after
   if (!after || after.list !== 'allow' || !isBroad(after.entry)) return null
   return {
-    id: findingId('permissions.broadened', change.path),
+    id: findingId('permissions.broadened', change),
     ruleId: 'permissions.broadened',
     severity: 'MEDIUM',
     title: 'Permission allow-list broadened',

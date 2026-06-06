@@ -8,7 +8,7 @@ function make(
   detail: string,
   change: Change,
 ): Finding {
-  return { id: findingId(ruleId, change.path), ruleId, severity, title, detail, change }
+  return { id: findingId(ruleId, change), ruleId, severity, title, detail, change }
 }
 
 export function ruleSessionStartHookInjected(change: Change, _cfg: WardConfig): Finding | null {

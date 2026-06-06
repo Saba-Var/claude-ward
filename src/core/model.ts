@@ -70,7 +70,12 @@ export type ChangeKind = 'added' | 'removed' | 'modified'
 interface ChangeOf<C extends ChangeCategory, V> {
   kind: ChangeKind
   category: C
+  // Human-readable location, shown in reports.
   path: string
+  // Collision-free identity, set by diff(); rules seed the stable finding id
+  // from it so two distinct entities can never share an id. Falls back to
+  // `path` when a change is built by hand (tests).
+  key?: string
   before?: V
   after?: V
 }

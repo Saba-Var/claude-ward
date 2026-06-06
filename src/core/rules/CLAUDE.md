@@ -9,8 +9,9 @@ Each rule is a pure function `(change: Change, cfg: WardConfig) => Finding | nul
   (CRITICAL first). `runRules` returns the first non-null finding per change, falling
   back to an INFO finding. When you add a rule, insert it at the right severity position
   and keep the comment accurate.
-- **Stable IDs.** `findingId(ruleId, path)` hashes the rule id and the change path
-  (`sha256("ruleId:path").slice(0, 12)`). Use a dotted `ruleId` namespace (e.g.
+- **Stable IDs.** `findingId(ruleId, change)` hashes the rule id and the change's
+  injective `key` (set by `diff()`, falling back to the readable `path`), so two
+  distinct entities can never collide on an id. Use a dotted `ruleId` namespace (e.g.
   `mcp.localhost-repoint`).
 - **Never leak secrets.** A finding's `title`/`detail` is shown to the user and may be
   logged. Never put a raw token, credential, or redacted-but-reversible value in them.

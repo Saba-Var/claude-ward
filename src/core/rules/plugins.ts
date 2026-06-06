@@ -8,7 +8,7 @@ export function ruleMarketplaceOrPlugin(change: Change, cfg: WardConfig): Findin
     const name = change.after
     if (name === undefined) return null
     return {
-      id: findingId('plugins.new-marketplace', change.path),
+      id: findingId('plugins.new-marketplace', change),
       ruleId: 'plugins.new-marketplace',
       severity: 'MEDIUM',
       title: 'New marketplace source added',
@@ -23,7 +23,7 @@ export function ruleMarketplaceOrPlugin(change: Change, cfg: WardConfig): Findin
     const marketplace = id.includes('@') ? id.slice(id.lastIndexOf('@') + 1) : undefined
     if (marketplace && cfg.knownMarketplaces.includes(marketplace)) return null
     return {
-      id: findingId('plugins.new-plugin', change.path),
+      id: findingId('plugins.new-plugin', change),
       ruleId: 'plugins.new-plugin',
       severity: 'MEDIUM',
       title: 'Plugin from a non-known marketplace',
