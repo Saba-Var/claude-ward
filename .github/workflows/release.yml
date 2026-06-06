@@ -17,7 +17,7 @@ jobs:
     steps:
       # On a normal push this just opens/updates the release PR. When that PR is
       # merged, this same run creates the release and sets release_created=true.
-      - uses: googleapis/release-please-action@v4
+      - uses: googleapis/release-please-action@v5
         id: release
 
       # Everything below runs only on the push that merged the release PR, so
