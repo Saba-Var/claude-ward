@@ -16,7 +16,7 @@ export function ruleCredentials(change: Change, _cfg: WardConfig): Finding | nul
       ruleId: 'credentials.mode',
       severity: 'HIGH',
       title: 'Credentials file became group/world-readable',
-      detail: `~/.claude/.credentials.json is group/world-readable (mode ${(after.mode ?? 0).toString(8)}); expected 600. Readable by others — tighten permissions immediately.`,
+      detail: `~/.claude/.credentials.json is group/world-readable (mode ${(after.mode ?? 0).toString(8)}); expected 600. Readable by others - tighten permissions immediately.`,
       change,
     }
   }

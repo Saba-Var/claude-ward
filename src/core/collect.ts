@@ -11,7 +11,7 @@ import {
 // Env values can hold OAuth tokens / API keys. We must be able to detect a
 // change without ever persisting the secret, so every value is replaced by a
 // short hash marker. The only exceptions are the URL-valued keys the rules
-// actually inspect — those are endpoints, not secrets, and host extraction
+// actually inspect - those are endpoints, not secrets, and host extraction
 // needs the real value. The marker is deliberately short so it never trips the
 // obfuscation blob regexes.
 const SAFE_RAW_ENV_KEYS = new Set(['ANTHROPIC_BASE_URL', 'OTEL_EXPORTER_OTLP_ENDPOINT'])

@@ -21,7 +21,7 @@ eslint.config.js        flat config, typescript-eslint
 vitest.config.ts        test config (passWithNoTests off once tests exist)
 .gitignore
 src/
-  cli.ts                #!/usr/bin/env node — commander wiring
+  cli.ts                #!/usr/bin/env node - commander wiring
   index.ts              library exports (core types + functions)
   core/
     model.ts            TrackedState, Change, Finding, Severity, WardConfig
@@ -365,7 +365,7 @@ describe('sha256', () => {
 - [ ] **Step 2: Run test to verify it fails**
 
 Run: `npx vitest run test/hash.test.ts`
-Expected: FAIL — cannot find module `../src/core/hash.js`.
+Expected: FAIL - cannot find module `../src/core/hash.js`.
 
 - [ ] **Step 3: Write `src/core/hash.ts`**
 
@@ -435,7 +435,7 @@ describe('config', () => {
 - [ ] **Step 2: Run test to verify it fails**
 
 Run: `npx vitest run test/config.test.ts`
-Expected: FAIL — module not found.
+Expected: FAIL - module not found.
 
 - [ ] **Step 3: Write `src/core/config.ts`**
 
@@ -504,7 +504,7 @@ git commit -m "feat: add ward config with allowlist derivation"
 
 ---
 
-## Task 5: Collect — normalize raw config into TrackedState
+## Task 5: Collect - normalize raw config into TrackedState
 
 **Files:**
 
@@ -596,7 +596,7 @@ describe('collect', () => {
 - [ ] **Step 2: Run test to verify it fails**
 
 Run: `npx vitest run test/collect.test.ts`
-Expected: FAIL — module not found.
+Expected: FAIL - module not found.
 
 - [ ] **Step 3: Write `src/core/collect.ts`**
 
@@ -834,7 +834,7 @@ describe('diff', () => {
 - [ ] **Step 2: Run test to verify it fails**
 
 Run: `npx vitest run test/diff.test.ts`
-Expected: FAIL — module not found.
+Expected: FAIL - module not found.
 
 - [ ] **Step 3: Write `src/core/diff.ts`**
 
@@ -1086,7 +1086,7 @@ describe('ruleMcpHostNotAllowlisted', () => {
 - [ ] **Step 2: Run test to verify it fails**
 
 Run: `npx vitest run test/rules-mcp.test.ts`
-Expected: FAIL — module not found.
+Expected: FAIL - module not found.
 
 - [ ] **Step 3: Write `src/core/rules/mcp.ts`**
 
@@ -1175,7 +1175,7 @@ export function ruleMcpHostNotAllowlisted(change: Change, cfg: WardConfig): Find
 - [ ] **Step 4: Run test to verify it passes**
 
 Run: `npx vitest run test/rules-mcp.test.ts`
-Expected: FAIL — `findingId` not yet exported from `./index.js`. (Defined in Task 14.) Temporarily add a local stub if running this task standalone, but the intended fix is Task 14.
+Expected: FAIL - `findingId` not yet exported from `./index.js`. (Defined in Task 14.) Temporarily add a local stub if running this task standalone, but the intended fix is Task 14.
 
 > Note for the executor: Task 14 creates `src/core/rules/index.ts` exporting `findingId`. If you implement rules before the orchestrator, add this minimal file first so imports resolve:
 >
@@ -1272,7 +1272,7 @@ describe('ruleHookChange', () => {
 - [ ] **Step 2: Run test to verify it fails**
 
 Run: `npx vitest run test/rules-hooks.test.ts`
-Expected: FAIL — module not found.
+Expected: FAIL - module not found.
 
 - [ ] **Step 3: Write `src/core/rules/hooks.ts`**
 
@@ -1384,7 +1384,7 @@ describe('ruleEnvRedirect', () => {
 - [ ] **Step 2: Run test to verify it fails**
 
 Run: `npx vitest run test/rules-env.test.ts`
-Expected: FAIL — module not found.
+Expected: FAIL - module not found.
 
 - [ ] **Step 3: Write `src/core/rules/env.ts`**
 
@@ -1484,7 +1484,7 @@ describe('ruleCredentials', () => {
 - [ ] **Step 2: Run test to verify it fails**
 
 Run: `npx vitest run test/rules-credentials.test.ts`
-Expected: FAIL — module not found.
+Expected: FAIL - module not found.
 
 - [ ] **Step 3: Write `src/core/rules/credentials.ts`**
 
@@ -1592,7 +1592,7 @@ describe('ruleObfuscation', () => {
 - [ ] **Step 2: Run test to verify it fails**
 
 Run: `npx vitest run test/rules-obfuscation.test.ts`
-Expected: FAIL — module not found.
+Expected: FAIL - module not found.
 
 - [ ] **Step 3: Write `src/core/rules/obfuscation.ts`**
 
@@ -1713,7 +1713,7 @@ describe('ruleBroadenedPermissions', () => {
 - [ ] **Step 2: Run test to verify it fails**
 
 Run: `npx vitest run test/rules-permissions.test.ts`
-Expected: FAIL — module not found.
+Expected: FAIL - module not found.
 
 - [ ] **Step 3: Write `src/core/rules/permissions.ts`**
 
@@ -1806,7 +1806,7 @@ describe('ruleMarketplaceOrPlugin', () => {
 - [ ] **Step 2: Run test to verify it fails**
 
 Run: `npx vitest run test/rules-plugins.test.ts`
-Expected: FAIL — module not found.
+Expected: FAIL - module not found.
 
 - [ ] **Step 3: Write `src/core/rules/plugins.ts`**
 
@@ -1981,7 +1981,7 @@ export const scenarios = {
 - [ ] **Step 3: Run test to verify it fails**
 
 Run: `npx vitest run test/rules-engine.test.ts`
-Expected: FAIL — `runRules` not exported from `src/core/rules/index.ts`.
+Expected: FAIL - `runRules` not exported from `src/core/rules/index.ts`.
 
 - [ ] **Step 4: Write the full `src/core/rules/index.ts`**
 
@@ -2044,7 +2044,7 @@ export function runRules(changes: Change[], cfg: WardConfig): Finding[] {
 - [ ] **Step 5: Run the full suite**
 
 Run: `npm test`
-Expected: PASS — all rule unit tests plus the fixture-driven engine tests green.
+Expected: PASS - all rule unit tests plus the fixture-driven engine tests green.
 
 - [ ] **Step 6: Commit**
 
@@ -2180,7 +2180,7 @@ describe('readJsonFile', () => {
 - [ ] **Step 2: Run test to verify it fails**
 
 Run: `npx vitest run test/io-read.test.ts`
-Expected: FAIL — module not found.
+Expected: FAIL - module not found.
 
 - [ ] **Step 3: Write `src/io/read.ts`**
 
@@ -2242,7 +2242,7 @@ git commit -m "feat: safe json/file reading with explicit result states"
 
 ---
 
-## Task 18: Snapshot — read all files and collect
+## Task 18: Snapshot - read all files and collect
 
 **Files:**
 
@@ -2451,7 +2451,7 @@ describe('report', () => {
 - [ ] **Step 2: Run test to verify it fails**
 
 Run: `npx vitest run test/io-report.test.ts`
-Expected: FAIL — module not found.
+Expected: FAIL - module not found.
 
 - [ ] **Step 3: Write `src/io/report.ts`**
 
@@ -3041,9 +3041,9 @@ git commit -m "feat: wire commander cli and live watch command"
 
 - Create: `README.md`, `LICENSE`, `CONTRIBUTING.md`, `SECURITY.md`, `CHANGELOG.md`, `.github/workflows/ci.yml`, `.github/ISSUE_TEMPLATE/bug_report.md`, `.github/ISSUE_TEMPLATE/new_signature.md`, `.github/PULL_REQUEST_TEMPLATE.md`
 
-> Voice reminder for every file below: write like a working developer. No emoji-spam, no marketing adjectives (powerful/robust/seamless/comprehensive/etc.), no "not just X — it's Y", vary sentence length, plain prose over tables, lead with the concrete attack, keep claims modest, include the limitations honestly.
+> Voice reminder for every file below: write like a working developer. No emoji-spam, no marketing adjectives (powerful/robust/seamless/comprehensive/etc.), no "not just X - it's Y", vary sentence length, plain prose over tables, lead with the concrete attack, keep claims modest, include the limitations honestly.
 
-- [ ] **Step 1: Write `LICENSE`** — standard MIT text, copyright holder `Saba Vartasashvili`, year `2026`.
+- [ ] **Step 1: Write `LICENSE`** - standard MIT text, copyright holder `Saba Vartasashvili`, year `2026`.
 
 - [ ] **Step 2: Write `README.md`** with these sections in order:
   - One-line description: "A tripwire that watches Claude Code's local config and tells you when something tampers with it."
@@ -3052,16 +3052,16 @@ git commit -m "feat: wire commander cli and live watch command"
   - Threat intro: describe the Mitiga MitM (April 2026) postinstall-rewrites-`~/.claude.json` attack and that Anthropic ruled it out of scope, link `https://www.mitiga.io/blog/claude-code-mcp-token-theft-mitm`; describe the Shai-Hulud / Mini Shai-Hulud npm worms harvesting `~/.claude.json` and injecting `.claude/settings.json` SessionStart hooks. State plainly that firewalls/EDR see this as a normal file write, so it goes unnoticed.
   - Quickstart: `npx claude-ward init` then `claude-ward install-hook`, plus `claude-ward scan` and `claude-ward watch`.
   - "How detection works" in plain language: baseline → snapshot → diff → deterministic rules → severities. List the CRITICAL/HIGH/MEDIUM/INFO signatures briefly.
-  - "Limitations — what this does not protect against": it detects, it does not prevent or roll back; it trusts the baseline you take at `init` (take it on a clean machine); it cannot catch tampering while it is not running unless wired as a hook; it watches a fixed set of files; signatures are heuristics and can be evaded or can false-positive.
+  - "Limitations - what this does not protect against": it detects, it does not prevent or roll back; it trusts the baseline you take at `init` (take it on a clean machine); it cannot catch tampering while it is not running unless wired as a hook; it watches a fixed set of files; signatures are heuristics and can be evaded or can false-positive.
   - Local-only promise: no network calls, no telemetry, read-only on watched files, secrets stored only as SHA-256 hashes.
   - Positioning: one paragraph vs generic file-integrity tools (those alert on any byte change; claude-ward understands MCP/hook/permission semantics and classifies by attack signature), and vs Claude-Defender (that guards Claude Desktop's MCP config via a GUI overlay; claude-ward guards the Claude Code CLI and is hook-integrated).
   - "Why I built this" stub: `<!-- TODO(author): personalize -->` with one placeholder sentence.
   - Contributing pointer to `CONTRIBUTING.md`.
   - Disclaimer: "Not affiliated with, endorsed by, or sponsored by Anthropic."
 
-- [ ] **Step 3: Write `CONTRIBUTING.md`** — how to run (`npm install`, `npm test`, `npm run build`, `npm run lint`), where the pure rule engine lives (`src/core/rules`), that new detection signatures are the most welcome PRs and must ship with a fixture + unit test, and the commit convention (Conventional Commits).
+- [ ] **Step 3: Write `CONTRIBUTING.md`** - how to run (`npm install`, `npm test`, `npm run build`, `npm run lint`), where the pure rule engine lives (`src/core/rules`), that new detection signatures are the most welcome PRs and must ship with a fixture + unit test, and the commit convention (Conventional Commits).
 
-- [ ] **Step 4: Write `SECURITY.md`** — threat model: protects against post-baseline tampering of the tracked Claude Code files matching known signatures. Does not protect against: a compromise that happened before `init`, attackers who also tamper with claude-ward's own state or binary, kernel/root-level attackers, or anything while the tool is not running. How to report a vuln (a contact placeholder), and that secrets are never stored (hash only).
+- [ ] **Step 4: Write `SECURITY.md`** - threat model: protects against post-baseline tampering of the tracked Claude Code files matching known signatures. Does not protect against: a compromise that happened before `init`, attackers who also tamper with claude-ward's own state or binary, kernel/root-level attackers, or anything while the tool is not running. How to report a vuln (a contact placeholder), and that secrets are never stored (hash only).
 
 - [ ] **Step 5: Write `CHANGELOG.md`** (Keep a Changelog):
 
@@ -3138,7 +3138,7 @@ Expected: all green, `dist/cli.js` and `dist/index.js` produced.
 - [ ] **Step 2: Pack inspection (lean published package)**
 
 Run: `npm pack --dry-run`
-Expected: tarball contains only `dist/**`, `package.json`, `README.md`, `LICENSE` — no `src`, `test`, or `node_modules`.
+Expected: tarball contains only `dist/**`, `package.json`, `README.md`, `LICENSE` - no `src`, `test`, or `node_modules`.
 
 - [ ] **Step 3: `npx`-style bin check**
 
@@ -3151,13 +3151,13 @@ Expected: help prints; scan with no baseline prints the "run init first" message
 
 Spec coverage check against `docs/superpowers/specs/2026-06-06-claude-ward-design.md`:
 
-- Monitored files: `.claude.json` (global + project mcpServers, hooks), `settings.json`/`settings.local.json` (hooks, plugins, marketplaces, permissions, env), `.credentials.json` (hash+mode+size only) — Tasks 5, 18.
-- All severities CRITICAL/HIGH/MEDIUM/INFO — Tasks 7–14.
-- CLI commands init/watch/scan/status/diff/approve/install-hook/uninstall-hook — Tasks 23–26.
+- Monitored files: `.claude.json` (global + project mcpServers, hooks), `settings.json`/`settings.local.json` (hooks, plugins, marketplaces, permissions, env), `.credentials.json` (hash+mode+size only) - Tasks 5, 18.
+- All severities CRITICAL/HIGH/MEDIUM/INFO - Tasks 7-14.
+- CLI commands init/watch/scan/status/diff/approve/install-hook/uninstall-hook - Tasks 23-26.
 - Hard constraints: read-only except install-hook (Task 25); secrets hashed only (Task 18); no network/telemetry in core (notify is local node-notifier only, Task 21); state under `~/.claude-ward` (Task 16); cross-platform with terminal fallback (Task 21).
 - Error handling: missing/malformed/denied (Task 17), partial-write debounce (Task 22).
-- Repo hygiene + voice constraints — Task 27.
-- 100% deterministic rules + every-rule tests + the eight required fixtures — Tasks 7–14.
+- Repo hygiene + voice constraints - Task 27.
+- 100% deterministic rules + every-rule tests + the eight required fixtures - Tasks 7-14.
 
 ```
 

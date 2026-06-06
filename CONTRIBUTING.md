@@ -1,6 +1,6 @@
 # Contributing
 
-Thanks for considering a contribution. The most useful ones are new detection signatures —
+Thanks for considering a contribution. The most useful ones are new detection signatures -
 read to the end for what those look like.
 
 ## Running the project
@@ -27,7 +27,7 @@ The detection logic is pure and lives in `src/core`:
   runs them. Each rule is a pure function `(change, config) => Finding | null`.
 
 Everything that touches the filesystem, the network of notification backends, or the
-terminal lives in `src/io` and `src/commands`. Keep the core free of side effects — that's
+terminal lives in `src/io` and `src/commands`. Keep the core free of side effects - that's
 what lets the rules be tested against fixtures with no mocks.
 
 ## Adding a detection signature
@@ -35,7 +35,7 @@ what lets the rules be tested against fixtures with no mocks.
 This is the contribution we most want. A good signature PR:
 
 1. Adds or extends a rule in `src/core/rules/`. If it's a new family, add a new file and
-   register it in the ordered list in `rules/index.ts` (order matters — the first matching
+   register it in the ordered list in `rules/index.ts` (order matters - the first matching
    rule wins per change, so place it by severity).
 2. Ships with a unit test for the rule and a fixture in `test/fixtures/states.ts` that the
    end-to-end engine test exercises. A signature without a test won't be merged, because we
@@ -49,7 +49,7 @@ every time.
 ## Commit messages and PRs
 
 Conventional Commits (`feat:`, `fix:`, `docs:`, `test:`, `chore:`, `style:`). Write them
-like a human explaining the change to a colleague — what and why, not a restatement of the
+like a human explaining the change to a colleague - what and why, not a restatement of the
 diff.
 
 Before opening a PR, run `npm test && npm run lint && npm run typecheck` and update

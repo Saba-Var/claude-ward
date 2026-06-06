@@ -11,12 +11,12 @@ tool.
 After you establish a baseline with `init`, claude-ward detects changes to the files it
 tracks that match known attack patterns:
 
-- An MCP endpoint in `~/.claude.json` repointed at localhost or another address — the
+- An MCP endpoint in `~/.claude.json` repointed at localhost or another address - the
   man-in-the-middle proxy technique documented by Mitiga.
 - An MCP server whose `command`/`args` were changed to fetch and execute remote code
   (pipe-to-shell, `base64 -d`, `eval`).
 - A `SessionStart` (or other) hook injected into `~/.claude/settings.json` for
-  persistence — the Shai-Hulud technique.
+  persistence - the Shai-Hulud technique.
 - MCP hosts and traffic-redirecting environment variables (`ANTHROPIC_BASE_URL`,
   `OTEL_EXPORTER_OTLP_ENDPOINT`) pointed at hosts you have not allowlisted.
 - The OAuth credential file changing unexpectedly, or its permissions loosening to be
@@ -55,7 +55,7 @@ The irony of a tool that defends against npm supply-chain attacks shipping as an
 package is not lost on us. Mitigations: dependencies are kept few and are pinned by a
 committed lockfile; the core (snapshot, diff, rules) makes no network calls. The one
 heavier transitive dependency is `node-notifier` (desktop notifications); if you would
-rather not pull it in, the notifier is optional at runtime — claude-ward falls back to
+rather not pull it in, the notifier is optional at runtime - claude-ward falls back to
 terminal output and still functions fully without a working notification backend.
 
 ## Reporting a vulnerability
@@ -68,4 +68,4 @@ a fix is warranted, it will be released and the report credited unless you prefe
 otherwise.
 
 For a vulnerability in Claude Code or the Anthropic platform, report it to Anthropic
-directly — claude-ward is an independent project and cannot act on those.
+directly - claude-ward is an independent project and cannot act on those.

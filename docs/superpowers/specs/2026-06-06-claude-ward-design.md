@@ -1,4 +1,4 @@
-# claude-ward — Design
+# claude-ward - Design
 
 Date: 2026-06-06
 Status: Approved
@@ -47,7 +47,7 @@ These are non-negotiable; a security tool that breaks them is worthless.
   `~/.claude-ward/` is the explicit `install-hook` / `uninstall-hook` command, with
   consent.
 - **Never store secret values.** For token fields and `~/.claude/.credentials.json`,
-  store only a SHA-256 hash plus metadata (file mode, size, mtime) — enough to detect
+  store only a SHA-256 hash plus metadata (file mode, size, mtime) - enough to detect
   change, never enough to leak the secret.
 - **Zero network calls, zero telemetry** in the core. Everything runs locally. Stated
   visibly in the README.
@@ -66,7 +66,7 @@ via tsup to ESM. Committed lockfile. `engines`, `bin`, `files`, `exports` config
 
 `~/.claude.json`:
 
-- top-level `mcpServers` and per-project `projects.<path>.mcpServers` — each server's
+- top-level `mcpServers` and per-project `projects.<path>.mcpServers` - each server's
   `command` / `args` / `url` / `env`
 - any `hooks`
 
@@ -80,7 +80,7 @@ via tsup to ESM. Committed lockfile. `engines`, `bin`, `files`, `exports` config
 
 `~/.claude/.credentials.json`:
 
-- hash + file mode + size + mtime only — contents never read into the baseline.
+- hash + file mode + size + mtime only - contents never read into the baseline.
 
 ## Architecture
 
@@ -103,7 +103,7 @@ io/read (fs) ──raw──> core/collect (pure) ──TrackedState──> core
 2. `core/collect` is pure: raw parsed JSON → a normalized `TrackedState`. MCP servers
    are flattened (scope + name → command/args/url/env). Hooks are grouped by event
    type. Plugins, marketplaces, permissions, and env are extracted. Credentials become
-   `{ hash, mode, size, mtime }` only — contents never enter the state.
+   `{ hash, mode, size, mtime }` only - contents never enter the state.
 3. `core/diff` is pure: `diff(baseline, current) → Change[]`, each change tagged
    `added` / `removed` / `modified` with a path and before/after values.
 4. `core/rules/*` are pure: `runRules(changes, config) → Finding[]`. One file per rule
@@ -151,8 +151,8 @@ test/
 
 ### State files (`~/.claude-ward/`)
 
-- `baseline.json` — serialized `TrackedState`. Secrets present only as hashes.
-- `config.json` — ward config including the host allowlist, auto-populated by `init`.
+- `baseline.json` - serialized `TrackedState`. Secrets present only as hashes.
+- `config.json` - ward config including the host allowlist, auto-populated by `init`.
 
 ## Detection rules
 
@@ -190,14 +190,14 @@ deterministically (no LLM). Severities:
 
 ## CLI commands
 
-- `init` — confirm current state is trusted, write baseline + a starter
+- `init` - confirm current state is trusted, write baseline + a starter
   `~/.claude-ward/config.json` with the allowlist auto-populated from current hosts.
-- `watch` — live foreground watcher; `--quiet` drops INFO.
-- `scan` — one-shot; non-zero exit on HIGH/CRITICAL. Intended for a SessionStart hook.
-- `status` — show baseline summary and last result.
-- `diff` — show current changes vs baseline.
-- `approve [--all | <id>]` — accept change(s), update baseline.
-- `install-hook` / `uninstall-hook` — wire a SessionStart hook running `claude-ward
+- `watch` - live foreground watcher; `--quiet` drops INFO.
+- `scan` - one-shot; non-zero exit on HIGH/CRITICAL. Intended for a SessionStart hook.
+- `status` - show baseline summary and last result.
+- `diff` - show current changes vs baseline.
+- `approve [--all | <id>]` - accept change(s), update baseline.
+- `install-hook` / `uninstall-hook` - wire a SessionStart hook running `claude-ward
 scan`. Since this edits a watched file, auto-re-baseline that single change so it
   never self-triggers.
 
@@ -219,14 +219,14 @@ missing / malformed / partial / permission-denied cases.
 
 ## Build order
 
-1. `core/model`, `core/collect`, `core/diff`, `core/rules/*` + their tests — green first.
+1. `core/model`, `core/collect`, `core/diff`, `core/rules/*` + their tests - green first.
 2. `io/*` (read, baseline, watcher, notify, report) and `commands/*`, `cli.ts`.
 3. Repo-hygiene files (README, LICENSE, CONTRIBUTING, SECURITY, CHANGELOG, CI,
    issue/PR templates) last, once the tool works.
 
 ## Repository hygiene
 
-- `README.md` — one-line description; CI / npm / license badges only; concrete threat
+- `README.md` - one-line description; CI / npm / license badges only; concrete threat
   intro with the Mitiga + Shai-Hulud links; 30-second quickstart
   (`npx claude-ward init` → `claude-ward install-hook`); "How detection works" in plain
   language; honest "Limitations" section; local-only / no-telemetry promise; positioning
@@ -234,13 +234,13 @@ missing / malformed / partial / permission-denied cases.
   disclaimer "Not affiliated with, endorsed by, or sponsored by Anthropic."; a marked
   placeholder near the top for a demo GIF/asciinema; a short "Why I built this" stub.
 - `LICENSE` (MIT).
-- `CONTRIBUTING.md` — short and concrete: run, test, commit convention, PRs welcome
+- `CONTRIBUTING.md` - short and concrete: run, test, commit convention, PRs welcome
   (especially new detection signatures).
-- `SECURITY.md` — real threat model: what it protects against, what it does not, how to
+- `SECURITY.md` - real threat model: what it protects against, what it does not, how to
   report a vuln.
-- `CHANGELOG.md` — Keep a Changelog format; follow semver.
-- `.github/workflows/ci.yml` — typecheck, lint, tests on push/PR.
-- `.github/ISSUE_TEMPLATE/` — bug report + new-signature request; PR template.
+- `CHANGELOG.md` - Keep a Changelog format; follow semver.
+- `.github/workflows/ci.yml` - typecheck, lint, tests on push/PR.
+- `.github/ISSUE_TEMPLATE/` - bug report + new-signature request; PR template.
 - Conventional commits, written like a person (varied, specific).
 
 ## Voice
@@ -248,7 +248,7 @@ missing / malformed / partial / permission-denied cases.
 All prose written like a working developer, not a content generator. No emoji-spam (at
 most one or two anywhere). No marketing adjectives (powerful, robust, seamless,
 comprehensive, etc.) or hype verbs (leverage, delve, unlock, supercharge). Avoid the
-"not just X — it's Y" construction and heavy em-dash habit. Plain prose over tables.
+"not just X - it's Y" construction and heavy em-dash habit. Plain prose over tables.
 Lead with the concrete attack, not an abstract intro. Keep every claim accurate and
 modest; the limitations section is part of that. Comments only where logic is
 non-obvious.
@@ -256,7 +256,7 @@ non-obvious.
 ## Out of scope
 
 - Claude Desktop (the GUI app).
-- Real-time blocking or remediation — claude-ward detects and alerts; it does not
+- Real-time blocking or remediation - claude-ward detects and alerts; it does not
   prevent writes or roll back changes.
 - Any network feature, cloud sync, or telemetry.
-- LLM-based classification — all detection is deterministic.
+- LLM-based classification - all detection is deterministic.
