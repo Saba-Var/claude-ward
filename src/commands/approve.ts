@@ -13,6 +13,9 @@ export function approveCommand(opts: { all?: boolean; id?: string; now: string }
   const snap = takeSnapshot()
 
   if (opts.all) {
+    // --all means the user explicitly chose to trust the entire current
+    // snapshot. The surgical approve <id> path below (applyChange) is the model
+    // install-hook reuses so it never blesses more than its own edit.
     saveBaseline(snap.state, opts.now)
     process.stdout.write('All current changes approved; baseline updated.\n')
     return

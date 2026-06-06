@@ -1,6 +1,7 @@
-import { mkdirSync, readFileSync, renameSync, writeFileSync } from 'node:fs'
+import { mkdirSync, readFileSync } from 'node:fs'
 import { defaultConfig, loadConfig } from '../core/config.js'
 import { type TrackedState, type WardConfig, emptyState } from '../core/model.js'
+import { writeFileAtomic } from './atomic.js'
 import { paths } from './paths.js'
 
 export interface Baseline {
@@ -12,16 +13,6 @@ export interface Baseline {
 
 function ensureDir(): void {
   mkdirSync(paths.wardDir, { recursive: true, mode: 0o700 })
-}
-
-// Write to a sibling temp file then rename into place. rename is atomic within
-// a directory on POSIX, so a killed write cannot leave the baseline - the
-// tool's own trust anchor - truncated. Mode 0o600 keeps the file, which holds
-// verbatim MCP URLs and the credential hash, owner-only.
-function writeAtomic(path: string, data: string): void {
-  const tmp = `${path}.${process.pid}.tmp`
-  writeFileSync(tmp, data, { mode: 0o600 })
-  renameSync(tmp, path)
 }
 
 function isBaseline(value: unknown): value is Baseline {
@@ -56,7 +47,7 @@ export function saveBaseline(state: TrackedState, now: string): Baseline {
     updatedAt: now,
     state,
   }
-  writeAtomic(paths.baseline, JSON.stringify(baseline, null, 2))
+  writeFileAtomic(paths.baseline, JSON.stringify(baseline, null, 2), 0o600)
   return baseline
 }
 
@@ -70,5 +61,5 @@ export function loadWardConfig(): WardConfig {
 
 export function saveWardConfig(config: WardConfig): void {
   ensureDir()
-  writeAtomic(paths.config, JSON.stringify(config, null, 2))
+  writeFileAtomic(paths.config, JSON.stringify(config, null, 2), 0o600)
 }
