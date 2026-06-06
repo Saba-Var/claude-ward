@@ -48,17 +48,24 @@ that matches a known attack.
 ## Quickstart
 
 ```sh
+# Install the CLI (this also gives you the short `cward` alias):
+npm i -g claude-ward
+
 # Take a baseline of your current (trusted) config:
-npx claude-ward init
+claude-ward init
 
 # Wire a check into Claude Code's own startup so every session is scanned:
-npx claude-ward install-hook
+claude-ward install-hook
 ```
 
+A global install matters here: `install-hook` writes a `SessionStart` hook that calls
+`claude-ward`, so the binary has to be on your `PATH`. `npx claude-ward scan` is fine for a
+one-off check, but it won't satisfy the hook.
+
 `init` records what your config looks like right now and treats it as the known-good
-state. `install-hook` adds a `SessionStart` hook that runs `claude-ward scan` each time
-you start Claude Code; if anything has changed in a way that looks suspicious, the scan
-exits non-zero and prints what it found.
+state. `install-hook` adds a `SessionStart` hook that runs `claude-ward scan --quiet` each
+time you start Claude Code; if anything has changed in a way that looks suspicious, the
+scan exits non-zero and prints what it found.
 
 You can also check on demand:
 
