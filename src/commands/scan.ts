@@ -34,6 +34,13 @@ export function scanCommand(opts: { quiet?: boolean } = {}): void {
     return
   }
   reportWarnings(result.warnings)
-  process.stdout.write(`${formatFindings(result.findings, opts)}\n`)
-  if (hasActionable(result.findings)) process.exitCode = 2
+  const actionable = hasActionable(result.findings)
+  const report = `${formatFindings(result.findings, opts)}\n`
+  // A SessionStart hook that exits non-zero has its stdout discarded and only
+  // its stderr shown to the user. Quiet mode is the hook's mode, so an
+  // actionable finding must go to stderr there - otherwise the alert is thrown
+  // away in exactly the case the tripwire exists for.
+  if (opts.quiet && actionable) process.stderr.write(report)
+  else process.stdout.write(report)
+  if (actionable) process.exitCode = 2
 }
