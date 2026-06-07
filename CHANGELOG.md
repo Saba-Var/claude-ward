@@ -4,6 +4,13 @@ All notable changes to this project are documented here. The format is based on
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.7](https://github.com/Saba-Var/claude-ward/compare/v0.1.6...v0.1.7) (2026-06-07)
+
+
+### Bug Fixes
+
+* trust the in-place hook migration during install ([#28](https://github.com/Saba-Var/claude-ward/issues/28)) ([260746b](https://github.com/Saba-Var/claude-ward/commit/260746b01a29c5fe6dfe4e83444e7c5d22659ce9))
+
 ## [0.1.6](https://github.com/Saba-Var/claude-ward/compare/v0.1.5...v0.1.6) (2026-06-07)
 
 
