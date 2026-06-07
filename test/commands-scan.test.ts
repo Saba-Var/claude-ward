@@ -69,3 +69,35 @@ describe('scanCommand exit codes', () => {
     expect(out).toContain('warning: could not read')
   })
 })
+
+describe('scanCommand stream routing (SessionStart hook safety)', () => {
+  // A SessionStart hook that exits non-zero has its stdout discarded; only
+  // stderr reaches the user. So in quiet (hook) mode the alert must land on
+  // stderr, or the tripwire stays silent in exactly the case that matters.
+  it('writes actionable findings to stderr in quiet mode', () => {
+    let stdout = ''
+    let stderr = ''
+    vi.mocked(process.stdout.write).mockImplementation((s) => ((stdout += String(s)), true))
+    vi.mocked(process.stderr.write).mockImplementation((s) => ((stderr += String(s)), true))
+    writeClaude({ gh: { url: 'https://api.github.com/mcp' } })
+    saveBaseline(takeSnapshot().state, 't0')
+    writeClaude({ gh: { url: 'http://localhost:6666/mcp' } }) // repoint
+    scanCommand({ quiet: true })
+    expect(process.exitCode).toBe(2)
+    expect(stderr).toContain('CRITICAL')
+    expect(stdout).not.toContain('CRITICAL')
+  })
+
+  it('keeps clean output on stdout in quiet mode', () => {
+    let stdout = ''
+    let stderr = ''
+    vi.mocked(process.stdout.write).mockImplementation((s) => ((stdout += String(s)), true))
+    vi.mocked(process.stderr.write).mockImplementation((s) => ((stderr += String(s)), true))
+    writeClaude({ gh: { url: 'https://api.github.com/mcp' } })
+    saveBaseline(takeSnapshot().state, 't0')
+    scanCommand({ quiet: true })
+    expect(process.exitCode).toBe(0)
+    expect(stdout).toContain('No changes against baseline')
+    expect(stderr).toBe('')
+  })
+})
