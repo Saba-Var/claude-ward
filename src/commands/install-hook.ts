@@ -119,6 +119,21 @@ function isLegacyHookRemove(c: Change): boolean {
   )
 }
 
+// An in-place upgrade (legacy command rewritten to ours at the same position)
+// shows up as a single `modified` change, not a remove + add. Trust it too, or
+// the migration leaves its own edit pending as a CRITICAL hook change.
+function isOurHookMigrate(c: Change): boolean {
+  return (
+    c.category === 'hook' &&
+    c.kind === 'modified' &&
+    c.after?.event === 'SessionStart' &&
+    c.after?.source === 'settings' &&
+    c.after?.command === HOOK_COMMAND &&
+    typeof c.before?.command === 'string' &&
+    LEGACY_HOOK_COMMANDS.includes(c.before.command)
+  )
+}
+
 // Fold only the changes matching `mine` into the baseline; leave everything
 // else pending so a routine consented edit cannot bless an attacker's
 // concurrent change (e.g. a localhost MCP repoint) by re-snapshotting the world.
@@ -192,7 +207,10 @@ export async function installHookCommand(opts: { yes?: boolean; now: string }): 
   settings.hooks.SessionStart.push({ hooks: [{ type: 'command', command: HOOK_COMMAND }] })
   writeSettings(settings, mode)
 
-  const { others } = rebaselineSelfEdit((c) => isOurHookAdd(c) || isLegacyHookRemove(c), opts.now)
+  const { others } = rebaselineSelfEdit(
+    (c) => isOurHookAdd(c) || isLegacyHookRemove(c) || isOurHookMigrate(c),
+    opts.now,
+  )
   process.stdout.write(
     `${migrating ? 'Updated' : 'Installed'} SessionStart hook and trusted only that change.\n`,
   )

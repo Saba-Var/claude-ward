@@ -65,19 +65,26 @@ describe('installHookCommand', () => {
     expect(out).toContain('already installed')
   })
 
-  it('migrates a legacy --quiet hook to the new command', async () => {
+  it('migrates a legacy --quiet hook to the new command and trusts that edit', async () => {
     writeFileSync(
       paths.settings,
       JSON.stringify({
         hooks: { SessionStart: [{ hooks: [{ type: 'command', command: LEGACY }] }] },
       }),
     )
-    await installHookCommand({ yes: true, now: 't0' })
+    // Baseline trusts the old hook, so the migration is a real, detectable edit.
+    saveBaseline(takeSnapshot().state, 't0')
+
+    await installHookCommand({ yes: true, now: 't1' })
     const groups = (readSettings().hooks as { SessionStart: { hooks: { command: string }[] }[] })
       .SessionStart
     const commands = groups.flatMap((g) => g.hooks.map((h) => h.command))
     expect(commands).toContain(HOOK)
     expect(commands).not.toContain(LEGACY)
+
+    // Our own migration must not be left pending as a CRITICAL hook change.
+    const findings = evaluate()?.findings ?? []
+    expect(findings.some((f) => f.ruleId === 'hook.sessionstart-modified')).toBe(false)
   })
 
   it('preserves the user existing settings keys when adding the hook', async () => {
