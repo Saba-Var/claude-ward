@@ -16,7 +16,8 @@ vi.mock('node:readline/promises', () => ({
   createInterface: () => ({ question: async () => prompt.answer, close: () => {} }),
 }))
 
-const HOOK = 'claude-ward scan --quiet'
+const HOOK = 'claude-ward scan --hook'
+const LEGACY = 'claude-ward scan --quiet'
 const original = { ...paths }
 let out: string
 
@@ -62,6 +63,21 @@ describe('installHookCommand', () => {
     out = ''
     await installHookCommand({ yes: true, now: 't1' })
     expect(out).toContain('already installed')
+  })
+
+  it('migrates a legacy --quiet hook to the new command', async () => {
+    writeFileSync(
+      paths.settings,
+      JSON.stringify({
+        hooks: { SessionStart: [{ hooks: [{ type: 'command', command: LEGACY }] }] },
+      }),
+    )
+    await installHookCommand({ yes: true, now: 't0' })
+    const groups = (readSettings().hooks as { SessionStart: { hooks: { command: string }[] }[] })
+      .SessionStart
+    const commands = groups.flatMap((g) => g.hooks.map((h) => h.command))
+    expect(commands).toContain(HOOK)
+    expect(commands).not.toContain(LEGACY)
   })
 
   it('preserves the user existing settings keys when adding the hook', async () => {
@@ -134,5 +150,17 @@ describe('uninstallHookCommand', () => {
     const commands = groups.flatMap((g) => g.hooks.map((h) => h.command))
     expect(commands).toContain('echo hi')
     expect(commands).not.toContain(HOOK)
+  })
+
+  it('removes a legacy --quiet hook too', async () => {
+    writeFileSync(
+      paths.settings,
+      JSON.stringify({
+        hooks: { SessionStart: [{ hooks: [{ type: 'command', command: LEGACY }] }] },
+      }),
+    )
+    await uninstallHookCommand({ now: 't0' })
+    const hooks = readSettings().hooks as { SessionStart?: unknown }
+    expect(hooks.SessionStart).toBeUndefined()
   })
 })

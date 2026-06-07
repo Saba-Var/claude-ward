@@ -9,7 +9,10 @@ import { paths } from '../io/paths.js'
 import { readJsonFile, statFile } from '../io/read.js'
 import { takeSnapshot } from '../io/snapshot.js'
 
-const HOOK_COMMAND = 'claude-ward scan --quiet'
+const HOOK_COMMAND = 'claude-ward scan --hook'
+// Commands earlier versions installed. install/uninstall recognise these so an
+// upgrade migrates cleanly instead of leaving a stale, silent hook behind.
+const LEGACY_HOOK_COMMANDS = ['claude-ward scan --quiet']
 
 interface HookCommand {
   type: 'command'
@@ -57,10 +60,30 @@ function writeSettings(settings: SettingsShape, mode?: number): void {
   writeFileAtomic(paths.settings, `${JSON.stringify(settings, null, 2)}\n`, mode)
 }
 
-function hasOurHook(settings: SettingsShape): boolean {
+function hasCommand(settings: SettingsShape, cmd: string): boolean {
   return (settings.hooks?.SessionStart ?? []).some((g) =>
-    (g.hooks ?? []).some((h) => h.command === HOOK_COMMAND),
+    (g.hooks ?? []).some((h) => h.command === cmd),
   )
+}
+
+function hasOurHook(settings: SettingsShape): boolean {
+  return hasCommand(settings, HOOK_COMMAND)
+}
+
+function hasLegacyHook(settings: SettingsShape): boolean {
+  return LEGACY_HOOK_COMMANDS.some((c) => hasCommand(settings, c))
+}
+
+// Drop the named SessionStart commands, pruning any group left empty so we do
+// not leave dangling `{ hooks: [] }` entries behind.
+function stripCommands(settings: SettingsShape, cmds: string[]): void {
+  const groups = settings.hooks?.SessionStart
+  if (!settings.hooks || !groups) return
+  const kept = groups
+    .map((g) => ({ ...g, hooks: (g.hooks ?? []).filter((h) => !cmds.includes(h.command)) }))
+    .filter((g) => g.hooks.length > 0)
+  if (kept.length === 0) delete settings.hooks.SessionStart
+  else settings.hooks.SessionStart = kept
 }
 
 // The hook line we wrote (added) or removed (removed). Used to re-baseline only
@@ -82,6 +105,17 @@ function isOurHookRemove(c: Change): boolean {
     c.before?.event === 'SessionStart' &&
     c.before?.source === 'settings' &&
     c.before?.command === HOOK_COMMAND
+  )
+}
+
+function isLegacyHookRemove(c: Change): boolean {
+  return (
+    c.category === 'hook' &&
+    c.kind === 'removed' &&
+    c.before?.event === 'SessionStart' &&
+    c.before?.source === 'settings' &&
+    typeof c.before?.command === 'string' &&
+    LEGACY_HOOK_COMMANDS.includes(c.before.command)
   )
 }
 
@@ -141,21 +175,27 @@ export async function installHookCommand(opts: { yes?: boolean; now: string }): 
     process.stdout.write('SessionStart hook already installed.\n')
     return
   }
+  const migrating = hasLegacyHook(settings)
   const ok = await confirm(
-    `This will add a SessionStart hook ("${HOOK_COMMAND}") to ${paths.settings}.\nThis is the only write claude-ward makes to a watched file. Continue?`,
+    `This will ${migrating ? 'update' : 'add'} a SessionStart hook ("${HOOK_COMMAND}") in ${paths.settings}.\nThis is the only write claude-ward makes to a watched file. Continue?`,
     Boolean(opts.yes),
   )
   if (!ok) {
     process.stdout.write('Aborted.\n')
     return
   }
+  // Replace any older command in the same write so an upgrade never leaves two
+  // claude-ward hooks behind.
+  stripCommands(settings, LEGACY_HOOK_COMMANDS)
   settings.hooks ??= {}
   settings.hooks.SessionStart ??= []
   settings.hooks.SessionStart.push({ hooks: [{ type: 'command', command: HOOK_COMMAND }] })
   writeSettings(settings, mode)
 
-  const { others } = rebaselineSelfEdit(isOurHookAdd, opts.now)
-  process.stdout.write('Installed SessionStart hook and trusted only that change.\n')
+  const { others } = rebaselineSelfEdit((c) => isOurHookAdd(c) || isLegacyHookRemove(c), opts.now)
+  process.stdout.write(
+    `${migrating ? 'Updated' : 'Installed'} SessionStart hook and trusted only that change.\n`,
+  )
   reportPending(others)
 }
 
@@ -167,20 +207,17 @@ export async function uninstallHookCommand(opts: { now: string }): Promise<void>
     return
   }
   const { settings, mode } = read
-  const hooks = settings.hooks
-  const groups = hooks?.SessionStart
-  if (!hooks || !groups) {
+  if (!hasOurHook(settings) && !hasLegacyHook(settings)) {
     process.stdout.write('No SessionStart hook to remove.\n')
     return
   }
-  const kept = groups
-    .map((g) => ({ ...g, hooks: (g.hooks ?? []).filter((h) => h.command !== HOOK_COMMAND) }))
-    .filter((g) => g.hooks.length > 0)
-  if (kept.length === 0) delete hooks.SessionStart
-  else hooks.SessionStart = kept
+  stripCommands(settings, [HOOK_COMMAND, ...LEGACY_HOOK_COMMANDS])
   writeSettings(settings, mode)
 
-  const { others } = rebaselineSelfEdit(isOurHookRemove, opts.now)
+  const { others } = rebaselineSelfEdit(
+    (c) => isOurHookRemove(c) || isLegacyHookRemove(c),
+    opts.now,
+  )
   process.stdout.write('Removed SessionStart hook and trusted only that change.\n')
   reportPending(others)
 }
