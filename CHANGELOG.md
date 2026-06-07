@@ -4,6 +4,13 @@ All notable changes to this project are documented here. The format is based on
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.5](https://github.com/Saba-Var/claude-ward/compare/v0.1.4...v0.1.5) (2026-06-07)
+
+
+### Bug Fixes
+
+* route hook-mode alerts to stderr so SessionStart shows them ([#24](https://github.com/Saba-Var/claude-ward/issues/24)) ([36c87f6](https://github.com/Saba-Var/claude-ward/commit/36c87f62908a156aefb187d72df6f09dbd0ad39c))
+
 ## [0.1.4](https://github.com/Saba-Var/claude-ward/compare/v0.1.3...v0.1.4) (2026-06-07)
 
 
