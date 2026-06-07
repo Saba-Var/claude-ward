@@ -63,9 +63,11 @@ A global install matters here: `install-hook` writes a `SessionStart` hook that 
 one-off check, but it won't satisfy the hook.
 
 `init` records what your config looks like right now and treats it as the known-good
-state. `install-hook` adds a `SessionStart` hook that runs `claude-ward scan --quiet` each
-time you start Claude Code; if anything has changed in a way that looks suspicious, the
-scan exits non-zero and prints what it found.
+state. `install-hook` adds a `SessionStart` hook that runs `claude-ward scan --hook` each
+time you start Claude Code; if anything has changed in a way that looks suspicious, it
+raises a desktop notification and hands the details to Claude so it can flag them in the
+session. (A SessionStart hook only reaches you when it exits 0, so this mode never fails
+the hook - use plain `claude-ward scan`, which exits non-zero on findings, in scripts.)
 
 You can also check on demand:
 

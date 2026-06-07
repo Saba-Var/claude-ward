@@ -6,7 +6,10 @@ import { emptyState } from '../src/core/model.js'
 import { paths } from '../src/io/paths.js'
 import { saveBaseline } from '../src/io/baseline.js'
 import { takeSnapshot } from '../src/io/snapshot.js'
+import { notify } from '../src/io/notify.js'
 import { scanCommand } from '../src/commands/scan.js'
+
+vi.mock('../src/io/notify.js', () => ({ notify: vi.fn() }))
 
 const original = { ...paths }
 let out: string
@@ -70,34 +73,58 @@ describe('scanCommand exit codes', () => {
   })
 })
 
-describe('scanCommand stream routing (SessionStart hook safety)', () => {
-  // A SessionStart hook that exits non-zero has its stdout discarded; only
-  // stderr reaches the user. So in quiet (hook) mode the alert must land on
-  // stderr, or the tripwire stays silent in exactly the case that matters.
-  it('writes actionable findings to stderr in quiet mode', () => {
+describe('scanCommand --hook (SessionStart)', () => {
+  // A SessionStart hook only reaches the user through two channels: stdout
+  // captured into the model's context (which requires exit 0 - a non-zero exit
+  // makes Claude Code discard all hook output), and a desktop notification.
+  // So --hook must exit 0 and emit a JSON additionalContext payload on stdout.
+  beforeEach(() => vi.mocked(notify).mockClear())
+
+  it('emits an additionalContext payload to stdout and exits 0 on findings', () => {
     let stdout = ''
-    let stderr = ''
     vi.mocked(process.stdout.write).mockImplementation((s) => ((stdout += String(s)), true))
-    vi.mocked(process.stderr.write).mockImplementation((s) => ((stderr += String(s)), true))
     writeClaude({ gh: { url: 'https://api.github.com/mcp' } })
     saveBaseline(takeSnapshot().state, 't0')
     writeClaude({ gh: { url: 'http://localhost:6666/mcp' } }) // repoint
-    scanCommand({ quiet: true })
-    expect(process.exitCode).toBe(2)
-    expect(stderr).toContain('CRITICAL')
-    expect(stdout).not.toContain('CRITICAL')
+    scanCommand({ hook: true })
+    expect(process.exitCode).toBe(0)
+    const payload = JSON.parse(stdout)
+    expect(payload.hookSpecificOutput.hookEventName).toBe('SessionStart')
+    expect(payload.hookSpecificOutput.additionalContext).toContain('CRITICAL')
   })
 
-  it('keeps clean output on stdout in quiet mode', () => {
+  it('fires a desktop notification on findings', () => {
+    writeClaude({ gh: { url: 'https://api.github.com/mcp' } })
+    saveBaseline(takeSnapshot().state, 't0')
+    writeClaude({ gh: { url: 'http://localhost:6666/mcp' } })
+    scanCommand({ hook: true })
+    expect(vi.mocked(notify)).toHaveBeenCalledOnce()
+  })
+
+  it('stays silent and exits 0 on a clean config', () => {
+    let stdout = ''
+    vi.mocked(process.stdout.write).mockImplementation((s) => ((stdout += String(s)), true))
+    writeClaude({ gh: { url: 'https://api.github.com/mcp' } })
+    saveBaseline(takeSnapshot().state, 't0')
+    scanCommand({ hook: true })
+    expect(process.exitCode).toBe(0)
+    expect(stdout).toBe('')
+    expect(vi.mocked(notify)).not.toHaveBeenCalled()
+  })
+})
+
+describe('scanCommand --quiet exit code', () => {
+  it('still writes findings to stdout and exits 2', () => {
     let stdout = ''
     let stderr = ''
     vi.mocked(process.stdout.write).mockImplementation((s) => ((stdout += String(s)), true))
     vi.mocked(process.stderr.write).mockImplementation((s) => ((stderr += String(s)), true))
     writeClaude({ gh: { url: 'https://api.github.com/mcp' } })
     saveBaseline(takeSnapshot().state, 't0')
+    writeClaude({ gh: { url: 'http://localhost:6666/mcp' } })
     scanCommand({ quiet: true })
-    expect(process.exitCode).toBe(0)
-    expect(stdout).toContain('No changes against baseline')
+    expect(process.exitCode).toBe(2)
+    expect(stdout).toContain('CRITICAL')
     expect(stderr).toBe('')
   })
 })

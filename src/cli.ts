@@ -37,7 +37,8 @@ program
   .command('scan')
   .description('One-shot check; exits non-zero on HIGH/CRITICAL.')
   .option('--quiet', 'suppress INFO findings')
-  .action((opts) => scanCommand({ quiet: opts.quiet }))
+  .option('--hook', 'SessionStart mode: emit context + desktop alert, exit 0')
+  .action((opts) => scanCommand({ quiet: opts.quiet, hook: opts.hook }))
 
 program
   .command('diff')
