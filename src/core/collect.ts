@@ -35,8 +35,17 @@ function sanitizeUrl(value: string): string {
     return value
   }
   const hasUserinfo = u.username !== '' || u.password !== ''
-  if (!hasUserinfo && u.search === '' && u.hash === '') return value
-  return `${u.protocol}//${hasUserinfo ? 'redacted@' : ''}${u.host}${u.pathname}`
+  // Keep the query KEYS (sorted, deduped) but replace every value with a fixed
+  // marker. The values can carry tokens, so they must never be persisted; the
+  // key names are not secrets and let a rule notice that, say, an "api_key" was
+  // added to a URL that did not have one before.
+  let query = ''
+  if (u.search !== '') {
+    const keys = [...new Set(u.searchParams.keys())].sort()
+    query = `?${keys.map((k) => `${k}=redacted`).join('&')}`
+  }
+  if (!hasUserinfo && query === '' && u.hash === '') return value
+  return `${u.protocol}//${hasUserinfo ? 'redacted@' : ''}${u.host}${u.pathname}${query}`
 }
 
 function envValue(key: string, value: string): string {

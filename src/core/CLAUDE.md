@@ -12,9 +12,10 @@ Everything here is a pure function: same input, same output, no side effects.
 - **Secret-safe by construction.** `collect.ts` must redact token/API-key values to a
   short hash marker before they enter `TrackedState`. The URL-valued fields the rules
   inspect (MCP `url`, and the `ANTHROPIC_BASE_URL` / `OTEL_EXPORTER_OTLP_ENDPOINT` env
-  keys) stay raw so host extraction works, but `sanitizeUrl` first strips any userinfo
-  and query string, which can carry credentials. If a new field could carry a secret,
-  hash it or sanitize it.
+  keys) stay raw so host extraction works, but `sanitizeUrl` first redacts the userinfo
+  and every query-string value, which can carry credentials. Query keys are kept (they
+  are not secrets) so a rule can flag an added `api_key=` param. If a new field could
+  carry a secret, hash it or sanitize it.
 
 The flow is `collect -> diff -> rules`. Keep each stage independently testable. Every
 function here should have a direct unit test in `test/`.

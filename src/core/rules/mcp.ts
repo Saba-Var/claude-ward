@@ -81,6 +81,15 @@ export function ruleMcpHostNotAllowlisted(change: Change, cfg: WardConfig): Find
       change,
     )
   }
+  if (parsed.credentialQueryKeys.length > 0) {
+    return make(
+      'mcp.url-credentials',
+      'HIGH',
+      'MCP endpoint URL embeds credentials',
+      `Server "${after.name}" points at ${parsed.host} with a credential in the URL query (${parsed.credentialQueryKeys.join(', ')}).`,
+      change,
+    )
+  }
   if (cfg.allowedHosts.includes(parsed.host)) return null
   return make(
     'mcp.host-not-allowlisted',

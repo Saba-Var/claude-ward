@@ -153,4 +153,22 @@ describe('ruleMcpHostNotAllowlisted', () => {
     expect(finding?.severity).toBe('HIGH')
     expect(finding?.ruleId).toBe('mcp.url-userinfo')
   })
+
+  it('flags a credential-bearing query param as HIGH even on an allowlisted host', () => {
+    const finding = ruleMcpHostNotAllowlisted(
+      mcpChange('added', { url: 'https://api.github.com/mcp?api_key=redacted' }),
+      cfg,
+    )
+    expect(finding?.severity).toBe('HIGH')
+    expect(finding?.ruleId).toBe('mcp.url-credentials')
+  })
+
+  it('ignores a benign (non-credential) query param', () => {
+    expect(
+      ruleMcpHostNotAllowlisted(
+        mcpChange('added', { url: 'https://api.github.com/mcp?region=redacted' }),
+        cfg,
+      ),
+    ).toBeNull()
+  })
 })
