@@ -11,7 +11,15 @@ export interface ParsedUrl {
   scheme: string
   // True if the URL carried a user or password component (user:pass@host).
   hasUserinfo: boolean
+  // Query keys whose name looks like a credential (api_key, token, ...). The
+  // values are redacted upstream, but the key name is enough to flag that a
+  // secret was being passed in the URL.
+  credentialQueryKeys: string[]
 }
+
+// Query parameter names that carry a secret often enough to be worth flagging.
+const CREDENTIAL_QUERY_KEY =
+  /^(?:api[-_]?key|access[-_]?token|auth(?:orization)?|client[-_]?secret|key|passwd|password|pwd|secret|session|sig|signature|token)$/i
 
 export function parseUrl(value: string | undefined): ParsedUrl | undefined {
   if (!value) return undefined
@@ -21,10 +29,12 @@ export function parseUrl(value: string | undefined): ParsedUrl | undefined {
   } catch {
     return undefined
   }
+  const queryKeys = [...new Set(u.searchParams.keys())]
   return {
     host: canonicalHost(u.hostname),
     scheme: u.protocol.replace(/:$/, '').toLowerCase(),
     hasUserinfo: u.username !== '' || u.password !== '',
+    credentialQueryKeys: queryKeys.filter((k) => CREDENTIAL_QUERY_KEY.test(k)),
   }
 }
 

@@ -138,6 +138,18 @@ describe('collect', () => {
     expect(JSON.stringify(state)).not.toContain('sk-secret')
   })
 
+  it('keeps URL query keys but redacts their values, so an added credential param is visible', () => {
+    const state = collect({
+      claudeJson: {
+        mcpServers: { gh: { url: 'https://mcp.x.dev/mcp?api_key=topsecret&region=eu' } },
+      },
+    })
+    const url = state.mcpServers[0]?.url ?? ''
+    expect(url).not.toContain('topsecret') // value never persisted
+    expect(url).toContain('api_key') // key kept so the rule can flag it
+    expect(url).toContain('mcp.x.dev') // host preserved
+  })
+
   it('redaction is stable for the same value (so unchanged secrets do not diff)', () => {
     const a = collect({ settings: { env: { TOKEN: 'abc' } } })
     const b = collect({ settings: { env: { TOKEN: 'abc' } } })
