@@ -4,6 +4,18 @@ All notable changes to this project are documented here. The format is based on
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.0](https://github.com/Saba-Var/claude-ward/compare/v0.1.7...v0.2.0) (2026-06-08)
+
+
+### Features
+
+* detect credentials in MCP endpoint URL query params ([9131a9c](https://github.com/Saba-Var/claude-ward/commit/9131a9ce982c063cececd8b62cd77dd317fdf719))
+
+
+### Bug Fixes
+
+* exit non-zero when a watched file is unreadable ([65b0c06](https://github.com/Saba-Var/claude-ward/commit/65b0c06d62dfaa7cc1f293f16383edf80bcf24d3))
+
 ## [0.1.7](https://github.com/Saba-Var/claude-ward/compare/v0.1.6...v0.1.7) (2026-06-07)
 
 
