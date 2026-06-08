@@ -40,7 +40,9 @@ export function scanCommand(opts: { quiet?: boolean; hook?: boolean } = {}): voi
   }
   reportWarnings(result.warnings)
   process.stdout.write(`${formatFindings(result.findings, opts)}\n`)
-  if (hasActionable(result.findings)) process.exitCode = 2
+  // A watched file we could not read is the worst case to hide a tamper, so it
+  // must fail the exit code too - not just print a warning a script ignores.
+  if (hasActionable(result.findings) || result.warnings.length > 0) process.exitCode = 2
 }
 
 // SessionStart hooks reach the user two ways: a desktop notification, and

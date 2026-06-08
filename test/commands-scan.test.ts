@@ -71,6 +71,13 @@ describe('scanCommand exit codes', () => {
     scanCommand()
     expect(out).toContain('warning: could not read')
   })
+
+  it('exits 2 when a watched file is unreadable - the worst case to hide', () => {
+    saveBaseline(emptyState(), 't0')
+    writeFileSync(paths.claudeJson, '{not json')
+    scanCommand()
+    expect(process.exitCode).toBe(2)
+  })
 })
 
 describe('scanCommand --hook (SessionStart)', () => {
@@ -99,6 +106,13 @@ describe('scanCommand --hook (SessionStart)', () => {
     writeClaude({ gh: { url: 'http://localhost:6666/mcp' } })
     scanCommand({ hook: true })
     expect(vi.mocked(notify)).toHaveBeenCalledOnce()
+  })
+
+  it('keeps exit 0 even when a watched file is unreadable', () => {
+    saveBaseline(emptyState(), 't0')
+    writeFileSync(paths.claudeJson, '{not json')
+    scanCommand({ hook: true })
+    expect(process.exitCode).toBe(0)
   })
 
   it('stays silent and exits 0 on a clean config', () => {
