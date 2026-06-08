@@ -4,6 +4,13 @@ All notable changes to this project are documented here. The format is based on
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.1](https://github.com/Saba-Var/claude-ward/compare/v0.2.0...v0.2.1) (2026-06-08)
+
+
+### Bug Fixes
+
+* stop flagging credential token refresh as HIGH ([#34](https://github.com/Saba-Var/claude-ward/issues/34)) ([5f98c71](https://github.com/Saba-Var/claude-ward/commit/5f98c714f25f5707721a8b44de9cd8e6437d8c5a))
+
 ## [0.2.0](https://github.com/Saba-Var/claude-ward/compare/v0.1.7...v0.2.0) (2026-06-08)
 
 
