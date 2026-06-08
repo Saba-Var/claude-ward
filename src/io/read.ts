@@ -25,7 +25,7 @@ export function readJsonFile(path: string): ReadResult {
 }
 
 export type StatResult =
-  | { status: 'ok'; mode: number; size: number }
+  | { status: 'ok'; mode: number; size: number; uid: number; gid: number }
   | { status: 'missing' }
   | { status: 'denied'; error: string }
 
@@ -35,7 +35,7 @@ export type StatResult =
 export function statFile(path: string): StatResult {
   try {
     const s = statSync(path)
-    return { status: 'ok', mode: s.mode & 0o777, size: s.size }
+    return { status: 'ok', mode: s.mode & 0o777, size: s.size, uid: s.uid, gid: s.gid }
   } catch (err) {
     const code = (err as NodeJS.ErrnoException).code
     if (code === 'ENOENT') return { status: 'missing' }

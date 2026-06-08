@@ -49,6 +49,15 @@ describe('statFile', () => {
   it('reports missing for a nonexistent file', () => {
     expect(statFile(join(dir, 'gone.json')).status).toBe('missing')
   })
+
+  it.skipIf(typeof process.getuid !== 'function')('reports the owning uid and gid', () => {
+    const p = join(dir, 'owner.json')
+    writeFileSync(p, '{}')
+    const r = statFile(p)
+    expect(r.status).toBe('ok')
+    expect(r.status === 'ok' && r.uid).toBe(process.getuid?.())
+    expect(r.status === 'ok' && r.gid).toBe(process.getgid?.())
+  })
 })
 
 describe('readBytes', () => {

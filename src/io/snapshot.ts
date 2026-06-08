@@ -41,7 +41,14 @@ function readCredentials(warnings: SnapshotWarning[]): CredentialMeta {
     })
     return { present: true, unreadable: true }
   }
-  return { present: true, hash: sha256(bytes), mode: meta.mode, size: meta.size }
+  return {
+    present: true,
+    hash: sha256(bytes),
+    mode: meta.mode,
+    size: meta.size,
+    uid: meta.uid,
+    gid: meta.gid,
+  }
 }
 
 export function takeSnapshot(): Snapshot {

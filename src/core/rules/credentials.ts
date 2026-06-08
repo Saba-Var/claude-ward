@@ -1,8 +1,18 @@
-import type { Change, Finding, WardConfig } from '../model.js'
+import type { Change, CredentialMeta, Finding, WardConfig } from '../model.js'
 import { findingId } from './index.js'
 
 function isGroupOrWorldReadable(mode: number | undefined): boolean {
   return mode !== undefined && (mode & 0o077) !== 0
+}
+
+// A real chown: both sides know the owner and it differs. When the old baseline
+// predates owner tracking (uid/gid undefined), the first post-upgrade snapshot
+// fills the field in - that is a schema change, not a tamper, so it stays quiet.
+function ownerChanged(before: CredentialMeta | undefined, after: CredentialMeta): boolean {
+  if (!before) return false
+  const uidDrift = before.uid !== undefined && after.uid !== undefined && before.uid !== after.uid
+  const gidDrift = before.gid !== undefined && after.gid !== undefined && before.gid !== after.gid
+  return uidDrift || gidDrift
 }
 
 export function ruleCredentials(change: Change, _cfg: WardConfig): Finding | null {
@@ -21,6 +31,17 @@ export function ruleCredentials(change: Change, _cfg: WardConfig): Finding | nul
       change,
     }
   }
+  if (ownerChanged(change.before, after)) {
+    return {
+      id: findingId('credentials.owner', change),
+      ruleId: 'credentials.owner',
+      severity: 'HIGH',
+      title: 'Credentials file owner changed',
+      detail:
+        '~/.claude/.credentials.json is now owned by a different user or group. The file should stay owned by your account; a changed owner can mean another account took control of it. Investigate before re-authenticating.',
+      change,
+    }
+  }
   if (isGroupOrWorldReadable(after.mode)) {
     return {
       id: findingId('credentials.mode', change),
@@ -32,13 +53,18 @@ export function ruleCredentials(change: Change, _cfg: WardConfig): Finding | nul
     }
   }
   if (change.kind === 'modified') {
+    // Contents changed but the owner and permissions did not. This is what a
+    // routine token refresh looks like, and claude-ward cannot tell a refresh
+    // from a content swap without parsing the file (which it never does), so the
+    // honest call is INFO, not a HIGH that cries on every refresh. The real
+    // tamper signals - owner, permissions, unreadable - are handled above.
     return {
       id: findingId('credentials.hash', change),
       ruleId: 'credentials.hash',
-      severity: 'HIGH',
-      title: 'Credentials file changed unexpectedly',
+      severity: 'INFO',
+      title: 'Credentials file contents changed',
       detail:
-        'The hash of ~/.claude/.credentials.json changed. If you did not just (re)authenticate, treat this as suspicious.',
+        'The hash of ~/.claude/.credentials.json changed while its owner and permissions stayed the same. This is the normal result of a token refresh or re-authentication. If you have not used Claude Code recently, run "claude-ward diff" and look closer.',
       change,
     }
   }
