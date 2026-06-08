@@ -40,6 +40,11 @@ export interface CredentialMeta {
   hash?: string
   mode?: number
   size?: number
+  // Owner of the file. A changed uid/gid (the file now belongs to another
+  // account) is a tamper signal worth flagging, unlike a content-only change.
+  // Optional so baselines written before this field still load.
+  uid?: number
+  gid?: number
   // The file exists but could not be read (e.g. permissions dropped to 000).
   // Distinct from absent, so a tamper does not read as a normal logout.
   unreadable?: boolean

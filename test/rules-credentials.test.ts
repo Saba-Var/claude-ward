@@ -9,13 +9,48 @@ function credChange(kind: Change['kind'], after: CredentialMeta, before?: Creden
 }
 
 describe('ruleCredentials', () => {
-  it('flags a changed hash as HIGH', () => {
+  it('treats a content-only change (token refresh) as INFO, not HIGH', () => {
     const change = credChange(
       'modified',
-      { present: true, hash: 'b', mode: 0o600 },
+      { present: true, hash: 'b', mode: 0o600, uid: 1000, gid: 1000 },
+      { present: true, hash: 'a', mode: 0o600, uid: 1000, gid: 1000 },
+    )
+    const f = ruleCredentials(change, cfg)
+    expect(f?.severity).toBe('INFO')
+    expect(f?.ruleId).toBe('credentials.hash')
+  })
+
+  it('flags a changed owner (uid) as HIGH', () => {
+    const change = credChange(
+      'modified',
+      { present: true, hash: 'a', mode: 0o600, uid: 0, gid: 1000 },
+      { present: true, hash: 'a', mode: 0o600, uid: 1000, gid: 1000 },
+    )
+    const f = ruleCredentials(change, cfg)
+    expect(f?.severity).toBe('HIGH')
+    expect(f?.ruleId).toBe('credentials.owner')
+  })
+
+  it('flags a changed group (gid) as HIGH', () => {
+    const change = credChange(
+      'modified',
+      { present: true, hash: 'a', mode: 0o600, uid: 1000, gid: 0 },
+      { present: true, hash: 'a', mode: 0o600, uid: 1000, gid: 1000 },
+    )
+    expect(ruleCredentials(change, cfg)?.ruleId).toBe('credentials.owner')
+  })
+
+  it('does not flag owner drift when the old baseline lacks an owner', () => {
+    // A baseline written before uid/gid tracking has them undefined; the first
+    // snapshot after upgrade adds them. That is a schema fill-in, not a chown.
+    const change = credChange(
+      'modified',
+      { present: true, hash: 'a', mode: 0o600, uid: 1000, gid: 1000 },
       { present: true, hash: 'a', mode: 0o600 },
     )
-    expect(ruleCredentials(change, cfg)?.severity).toBe('HIGH')
+    const f = ruleCredentials(change, cfg)
+    expect(f?.severity).toBe('INFO')
+    expect(f?.ruleId).not.toBe('credentials.owner')
   })
 
   it('flags world-readable mode as HIGH', () => {

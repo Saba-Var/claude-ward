@@ -37,6 +37,14 @@ describe('takeSnapshot credentials', () => {
     expect(snap.state.credentials.unreadable).toBeUndefined()
   })
 
+  it.skipIf(typeof process.getuid !== 'function')('records the owning uid and gid', () => {
+    writeFileSync(paths.credentials, '{"token":"x"}')
+    chmodSync(paths.credentials, 0o600)
+    const snap = takeSnapshot()
+    expect(snap.state.credentials.uid).toBe(process.getuid?.())
+    expect(snap.state.credentials.gid).toBe(process.getgid?.())
+  })
+
   it('reports an absent credential file as not present, with no warning', () => {
     const snap = takeSnapshot()
     expect(snap.state.credentials).toEqual({ present: false })
